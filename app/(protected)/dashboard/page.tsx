@@ -74,8 +74,8 @@ export default function DashboardPage() {
             <h3>全体週間表示</h3>
           </div>
           <div className="toolbar-group">
-            <label className="compact-filter">
-              <span>部署</span>
+            <label className="filter-field">
+              <span className="filter-label">部署</span>
               <select value={department} onChange={(event) => setDepartment(event.target.value)}>
                 <option value="all">全部署</option>
                 {departments.map((item) => (

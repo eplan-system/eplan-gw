@@ -157,8 +157,8 @@ export default function SchedulesPage() {
               Google カレンダーへ追加
             </button>
             {mode === "team-week" ? (
-              <label className="compact-filter">
-                <span>部署</span>
+              <label className="filter-field">
+                <span className="filter-label">部署</span>
                 <select value={department} onChange={(event) => setDepartment(event.target.value)}>
                   <option value="all">全部署</option>
                   {departments.map((item) => (
@@ -169,8 +169,8 @@ export default function SchedulesPage() {
                 </select>
               </label>
             ) : (
-              <label className="compact-filter">
-                <span>対象</span>
+              <label className="filter-field">
+                <span className="filter-label">対象</span>
                 <select value={targetUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
                   {users.map((member) => (
                     <option key={member.id} value={member.id}>

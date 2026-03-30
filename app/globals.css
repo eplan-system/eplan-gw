@@ -453,6 +453,40 @@ button, input, select, textarea { font: inherit; }
   outline: none;
 }
 
+.filter-field {
+  display: grid;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.filter-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding-left: 4px;
+}
+
+.filter-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  padding: 12px 42px 12px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%) calc(100% - 22px) calc(50% - 1px) / 8px 8px no-repeat,
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%) calc(100% - 16px) calc(50% - 1px) / 8px 8px no-repeat,
+    white;
+  color: var(--text);
+  outline: none;
+}
+
+.filter-field select:focus {
+  border-color: rgba(11, 118, 97, 0.45);
+  box-shadow: 0 0 0 3px rgba(11, 118, 97, 0.1);
+}
+
 .week-switcher {
   display: flex;
   align-items: center;
@@ -994,6 +1028,7 @@ button, input, select, textarea { font: inherit; }
     gap: 8px;
   }
   .compact-filter,
+  .filter-field,
   .week-switcher,
   .status-badge {
     width: 100%;
