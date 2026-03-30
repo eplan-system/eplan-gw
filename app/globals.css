@@ -376,6 +376,15 @@ button, input, select, textarea { font: inherit; }
   font-size: 0.86rem;
 }
 
+.cell-placeholder-minimal {
+  min-height: 36px;
+  background: rgba(255, 255, 255, 0.28);
+  border-style: solid;
+  color: #8d948e;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 .month-add-button,
 .month-empty-button {
   border: 1px dashed var(--line);
@@ -554,9 +563,9 @@ button, input, select, textarea { font: inherit; }
 .add-cell-button {
   width: 100%;
   border: 1px dashed var(--line);
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 14px;
-  padding: 10px;
+  background: rgba(255, 255, 255, 0.56);
+  border-radius: 12px;
+  padding: 8px;
   text-align: center;
   cursor: pointer;
 }
@@ -569,7 +578,8 @@ button, input, select, textarea { font: inherit; }
 }
 
 .add-cell-button {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .mobile-user-title {

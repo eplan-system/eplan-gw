@@ -6,7 +6,9 @@ export type ScheduleVisibility = "public" | "busy" | "private";
 export interface RecurrenceRule {
   frequency: Exclude<RecurrenceFrequency, "none">;
   interval: number;
-  until: string;
+  endMode?: "until" | "count" | "never";
+  until?: string;
+  count?: number;
   weeklyDays?: number[];
 }
 

@@ -112,7 +112,9 @@ export function WeekBoard({
                       </button>
                     </>
                   ) : (
-                    <div className="cell-placeholder">クリックで登録</div>
+                    <div className="cell-placeholder cell-placeholder-minimal" aria-hidden="true">
+                      ＋
+                    </div>
                   )}
                 </div>
               );
@@ -186,7 +188,9 @@ export function WeekBoard({
                       </button>
                     </>
                   ) : (
-                    <div className="cell-placeholder">クリックで登録</div>
+                    <div className="cell-placeholder cell-placeholder-minimal" aria-hidden="true">
+                      ＋
+                    </div>
                   )}
                 </div>
               );

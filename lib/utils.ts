@@ -114,17 +114,26 @@ export function userNameById(users: AppUser[], userId: string) {
 export function recurrenceSummary(rule?: RecurrenceRule | null) {
   if (!rule) return "単発予定";
 
+  const endLabel =
+    rule.endMode === "count"
+      ? `${rule.count ?? 1}回`
+      : rule.endMode === "never"
+        ? "終了なし"
+        : rule.until
+          ? `${rule.until}まで`
+          : "終了日未設定";
+
   if (rule.frequency === "daily") {
-    return `${rule.interval}日ごと`;
+    return `${rule.interval}日ごと / ${endLabel}`;
   }
 
   if (rule.frequency === "weekly") {
     const labels = (rule.weeklyDays ?? []).map((day) => WEEKDAY_LABELS[day]).join("・");
-    return `${rule.interval}週ごと / ${labels || "曜日未指定"}`;
+    return `${rule.interval}週ごと / ${labels || "曜日未指定"} / ${endLabel}`;
   }
 
   if (rule.frequency === "monthly") {
-    return `${rule.interval}か月ごと`;
+    return `${rule.interval}か月ごと / ${endLabel}`;
   }
 
   return "単発予定";
@@ -211,13 +220,27 @@ export function expandRecurringSchedules(schedule: ScheduleDraft) {
 
   const start = new Date(schedule.startAt);
   const end = new Date(schedule.endAt);
-  const until = new Date(`${recurrenceRule.until}T23:59:59`);
   const durationMs = end.getTime() - start.getTime();
   const seriesId = schedule.seriesId ?? uid();
   const occurrences: ScheduleDraft[] = [];
+  const endMode = recurrenceRule.endMode ?? "until";
+  const maxOccurrences =
+    endMode === "count"
+      ? Math.max(1, recurrenceRule.count ?? 1)
+      : recurrenceRule.frequency === "daily"
+        ? 180
+        : recurrenceRule.frequency === "weekly"
+          ? 104
+          : 24;
+  const until =
+    endMode === "until" && recurrenceRule.until
+      ? new Date(`${recurrenceRule.until}T23:59:59`)
+      : endMode === "never"
+        ? new Date(start.getTime() + 1000 * 60 * 60 * 24 * 366 * 2)
+        : new Date(start.getTime() + 1000 * 60 * 60 * 24 * 366 * 2);
 
   if (recurrenceRule.frequency === "daily") {
-    for (let cursor = new Date(start); cursor <= until; cursor = addDays(cursor, recurrenceRule.interval)) {
+    for (let cursor = new Date(start), count = 0; cursor <= until && count < maxOccurrences; cursor = addDays(cursor, recurrenceRule.interval), count += 1) {
       const nextStart = new Date(cursor);
       const nextEnd = new Date(nextStart.getTime() + durationMs);
       occurrences.push({
@@ -234,8 +257,9 @@ export function expandRecurringSchedules(schedule: ScheduleDraft) {
   if (recurrenceRule.frequency === "weekly") {
     const weeklyDays = recurrenceRule.weeklyDays?.length ? recurrenceRule.weeklyDays : [start.getDay()];
 
-    for (let cursor = new Date(start); cursor <= until; cursor = addDays(cursor, recurrenceRule.interval * 7)) {
+    for (let cursor = new Date(start); cursor <= until && occurrences.length < maxOccurrences; cursor = addDays(cursor, recurrenceRule.interval * 7)) {
       weeklyDays.forEach((weekday) => {
+        if (occurrences.length >= maxOccurrences) return;
         const nextStart = new Date(cursor);
         nextStart.setDate(nextStart.getDate() + (weekday - nextStart.getDay()));
         nextStart.setHours(start.getHours(), start.getMinutes(), 0, 0);
@@ -256,7 +280,7 @@ export function expandRecurringSchedules(schedule: ScheduleDraft) {
   }
 
   if (recurrenceRule.frequency === "monthly") {
-    for (let cursor = new Date(start); cursor <= until; ) {
+    for (let cursor = new Date(start), count = 0; cursor <= until && count < maxOccurrences; count += 1) {
       const nextStart = new Date(cursor);
       const nextEnd = new Date(nextStart.getTime() + durationMs);
       occurrences.push({

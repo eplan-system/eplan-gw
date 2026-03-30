@@ -75,6 +75,8 @@ export function ScheduleDialog({
   const [recurrenceFrequency, setRecurrenceFrequency] = useState<RecurrenceFrequency>("none");
   const [recurrenceInterval, setRecurrenceInterval] = useState(1);
   const [recurrenceUntil, setRecurrenceUntil] = useState(defaultUntil(initialDate));
+  const [recurrenceEndMode, setRecurrenceEndMode] = useState<"until" | "count" | "never">("until");
+  const [recurrenceCount, setRecurrenceCount] = useState(10);
   const [weeklyDays, setWeeklyDays] = useState<number[]>([new Date(`${initialDate}T09:00:00`).getDay()]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -101,6 +103,8 @@ export function ScheduleDialog({
       setRecurrenceFrequency(schedule.recurrenceRule?.frequency ?? "none");
       setRecurrenceInterval(schedule.recurrenceRule?.interval ?? 1);
       setRecurrenceUntil(schedule.recurrenceRule?.until ?? schedule.startAt.slice(0, 10));
+      setRecurrenceEndMode(schedule.recurrenceRule?.endMode ?? (schedule.recurrenceRule?.count ? "count" : schedule.recurrenceRule?.until ? "until" : "never"));
+      setRecurrenceCount(schedule.recurrenceRule?.count ?? 10);
       setWeeklyDays(schedule.recurrenceRule?.weeklyDays ?? [new Date(schedule.startAt).getDay()]);
       setShowAdvanced(Boolean(schedule.recurrenceRule || schedule.visibility !== "public"));
       return;
@@ -119,6 +123,8 @@ export function ScheduleDialog({
     setRecurrenceFrequency("none");
     setRecurrenceInterval(1);
     setRecurrenceUntil(defaultUntil(initialDate));
+    setRecurrenceEndMode("until");
+    setRecurrenceCount(10);
     setWeeklyDays([new Date(`${initialDate}T09:00:00`).getDay()]);
     setShowAdvanced(false);
     setErrorMessage("");
@@ -148,7 +154,9 @@ export function ScheduleDialog({
           ? {
               frequency: recurrenceFrequency as Exclude<RecurrenceFrequency, "none">,
               interval: recurrenceInterval,
-              until: recurrenceUntil,
+              endMode: recurrenceEndMode,
+              until: recurrenceEndMode === "until" ? recurrenceUntil : undefined,
+              count: recurrenceEndMode === "count" ? recurrenceCount : undefined,
               weeklyDays: recurrenceFrequency === "weekly" ? weeklyDays : undefined
             }
           : null;
@@ -319,7 +327,9 @@ export function ScheduleDialog({
                       : recurrenceSummary({
                           frequency: recurrenceFrequency as Exclude<RecurrenceFrequency, "none">,
                           interval: recurrenceInterval,
-                          until: recurrenceUntil,
+                          endMode: recurrenceEndMode,
+                          until: recurrenceEndMode === "until" ? recurrenceUntil : undefined,
+                          count: recurrenceEndMode === "count" ? recurrenceCount : undefined,
                           weeklyDays
                         })}
                   </strong>
@@ -332,9 +342,25 @@ export function ScheduleDialog({
                       <input type="number" min={1} value={recurrenceInterval} onChange={(event) => setRecurrenceInterval(Number(event.target.value || 1))} />
                     </label>
                     <label className="field">
-                      <span>終了日</span>
-                      <input type="date" value={recurrenceUntil} onChange={(event) => setRecurrenceUntil(event.target.value)} />
+                      <span>終了条件</span>
+                      <select value={recurrenceEndMode} onChange={(event) => setRecurrenceEndMode(event.target.value as "until" | "count" | "never")}>
+                        <option value="until">終了日を指定</option>
+                        <option value="count">回数を指定</option>
+                        <option value="never">終了なし</option>
+                      </select>
                     </label>
+                    {recurrenceEndMode === "until" ? (
+                      <label className="field">
+                        <span>終了日</span>
+                        <input type="date" value={recurrenceUntil} onChange={(event) => setRecurrenceUntil(event.target.value)} />
+                      </label>
+                    ) : null}
+                    {recurrenceEndMode === "count" ? (
+                      <label className="field">
+                        <span>回数</span>
+                        <input type="number" min={1} value={recurrenceCount} onChange={(event) => setRecurrenceCount(Number(event.target.value || 1))} />
+                      </label>
+                    ) : null}
                     {recurrenceFrequency === "weekly" ? (
                       <div className="field full">
                         <span>曜日</span>
