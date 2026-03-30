@@ -103,12 +103,14 @@ export function WeekBoard({
                       <button
                         className="add-cell-button"
                         type="button"
+                        aria-label="予定を追加"
+                        title="予定を追加"
                         onClick={(event) => {
                           event.stopPropagation();
                           onAddSchedule(user.id, day.key);
                         }}
                       >
-                        ＋登録
+                        ＋
                       </button>
                     </>
                   ) : (
@@ -179,12 +181,14 @@ export function WeekBoard({
                       <button
                         className="add-cell-button"
                         type="button"
+                        aria-label="設備予定を追加"
+                        title="設備予定を追加"
                         onClick={(event) => {
                           event.stopPropagation();
                           onAddFacilitySchedule?.(facility.id, day.key);
                         }}
                       >
-                        ＋登録
+                        ＋
                       </button>
                     </>
                   ) : (

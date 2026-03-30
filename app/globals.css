@@ -390,12 +390,16 @@ button, input, select, textarea { font: inherit; }
 }
 
 .cell-placeholder-minimal {
-  min-height: 36px;
-  background: rgba(255, 255, 255, 0.28);
+  align-self: start;
+  width: 26px;
+  min-height: 26px;
+  background: rgba(255, 255, 255, 0.7);
   border-style: solid;
+  border-radius: 999px;
   color: #8d948e;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
+  line-height: 1;
 }
 
 .month-add-button,
@@ -625,7 +629,14 @@ button, input, select, textarea { font: inherit; }
 }
 
 .add-cell-button {
-  font-size: 0.8rem;
+  align-self: start;
+  width: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  line-height: 1;
   color: var(--muted);
 }
 
