@@ -33,6 +33,21 @@ type Snapshot = {
   comments: BoardComment[];
 };
 
+function removeUndefinedDeep<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => removeUndefinedDeep(item)).filter((item) => item !== undefined) as T;
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item !== undefined)
+      .map(([key, item]) => [key, removeUndefinedDeep(item)] as const);
+    return Object.fromEntries(entries) as T;
+  }
+
+  return value;
+}
+
 function fallbackFirebaseProfile(
   firebaseUser: { uid: string; email: string | null; displayName: string | null },
   role: AppUser["role"] = "member",
@@ -252,13 +267,13 @@ export async function listSchedules() {
 
 export async function saveSchedule(schedule: ScheduleDraft) {
   const existing = schedule.id ? (await listSchedules()).find((item) => item.id === schedule.id) : null;
-  const payload: ScheduleItem = {
+  const payload = removeUndefinedDeep<ScheduleItem>({
     ...schedule,
     visibility: schedule.visibility ?? "public",
     id: schedule.id ?? uid(),
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString()
-  };
+  });
 
   if (isFirebaseConfigured && db) {
     await setDoc(doc(db, "Schedules", payload.id), payload);
