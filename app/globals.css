@@ -901,26 +901,26 @@ button, input, select, textarea { font: inherit; }
     gap: 4px;
   }
   .month-cell {
-    min-height: 56px;
-    padding: 4px;
+    min-height: 72px;
+    padding: 5px;
     border-radius: 10px;
-    gap: 3px;
+    gap: 4px;
   }
   .month-cell-top {
     gap: 2px;
   }
   .month-cell-top strong,
   .month-cell-header strong {
-    font-size: 0.74rem;
+    font-size: 0.78rem;
   }
   .month-schedule-chip {
-    padding: 2px 4px;
+    padding: 3px 4px;
     border-radius: 6px;
     gap: 1px;
   }
   .month-schedule-chip strong {
-    font-size: 0.54rem;
-    line-height: 1.1;
+    font-size: 0.62rem;
+    line-height: 1.15;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -929,10 +929,10 @@ button, input, select, textarea { font: inherit; }
     display: none;
   }
   .month-schedule-list {
-    gap: 2px;
+    gap: 3px;
   }
   .month-cell .cell-placeholder {
-    min-height: 18px;
+    min-height: 20px;
     font-size: 0;
     color: transparent;
     position: relative;
