@@ -130,7 +130,9 @@ button, input, select, textarea { font: inherit; }
   width: 164px;
   height: auto;
   object-fit: contain;
-  border-radius: 10px;
+  display: block;
+  border-radius: 0;
+  background: white;
 }
 
 .topbar-title h2 {
