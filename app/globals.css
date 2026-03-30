@@ -891,53 +891,52 @@ button, input, select, textarea { font: inherit; }
     white-space: nowrap;
   }
   .month-view-card {
-    overflow-x: auto;
-    padding-bottom: 4px;
+    overflow-x: visible;
+    padding-bottom: 2px;
     gap: 8px;
   }
   .month-grid {
-    grid-template-columns: repeat(7, minmax(64px, 1fr));
-    min-width: 520px;
-    gap: 6px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    min-width: 0;
+    gap: 4px;
   }
   .month-cell {
-    min-height: 72px;
-    padding: 6px;
-    border-radius: 12px;
-    gap: 4px;
+    min-height: 56px;
+    padding: 4px;
+    border-radius: 10px;
+    gap: 3px;
   }
   .month-cell-top {
-    gap: 4px;
+    gap: 2px;
   }
   .month-cell-top strong,
   .month-cell-header strong {
-    font-size: 0.86rem;
+    font-size: 0.74rem;
   }
   .month-schedule-chip {
-    padding: 4px 5px;
-    border-radius: 8px;
+    padding: 2px 4px;
+    border-radius: 6px;
     gap: 1px;
   }
   .month-schedule-chip strong {
-    font-size: 0.66rem;
-    line-height: 1.2;
+    font-size: 0.54rem;
+    line-height: 1.1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .month-schedule-chip span {
-    font-size: 0.58rem;
-    line-height: 1.1;
+    display: none;
   }
   .month-schedule-list {
-    gap: 3px;
+    gap: 2px;
   }
   .month-cell .cell-placeholder {
-    min-height: 22px;
+    min-height: 18px;
     font-size: 0;
     color: transparent;
     position: relative;
-    border-radius: 8px;
+    border-radius: 6px;
   }
   .month-cell .cell-placeholder::after {
     content: "+";
@@ -946,7 +945,7 @@ button, input, select, textarea { font: inherit; }
     display: grid;
     place-items: center;
     color: var(--muted);
-    font-size: 0.9rem;
+    font-size: 0.74rem;
     font-weight: 700;
   }
   .mobile-bottom-nav {
