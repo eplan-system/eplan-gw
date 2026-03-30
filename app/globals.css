@@ -536,6 +536,12 @@ button, input, select, textarea { font: inherit; }
   z-index: 4;
   box-shadow: 0 10px 18px rgba(66, 54, 43, 0.06);
 }
+.week-grid.header .corner-cell,
+.week-grid.header .day-cell {
+  text-align: center;
+  justify-items: center;
+  align-content: center;
+}
 .sticky-cell, .day-cell, .schedule-cell {
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
