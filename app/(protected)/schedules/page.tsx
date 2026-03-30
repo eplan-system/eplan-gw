@@ -42,6 +42,7 @@ export default function SchedulesPage() {
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
   const [draftUserId, setDraftUserId] = useState("");
   const [draftDate, setDraftDate] = useState(formatDateKey(new Date()));
+  const [draftFacilityIds, setDraftFacilityIds] = useState<string[]>([]);
 
   async function refresh() {
     const [nextUsers, nextItems, nextFacilities] = await Promise.all([listUsers(), listSchedules(), listFacilities()]);
@@ -95,6 +96,15 @@ export default function SchedulesPage() {
     setSelectedSchedule(null);
     setDraftUserId(userId);
     setDraftDate(dayKey);
+    setDraftFacilityIds([]);
+    setDialogOpen(true);
+  }
+
+  function openNewFacilitySchedule(facilityId: string, dayKey: string) {
+    setSelectedSchedule(null);
+    setDraftUserId(user?.id || targetUserId || users[0]?.id || "");
+    setDraftDate(dayKey);
+    setDraftFacilityIds([facilityId]);
     setDialogOpen(true);
   }
 
@@ -102,6 +112,7 @@ export default function SchedulesPage() {
     setSelectedSchedule(schedule);
     setDraftUserId(schedule.ownerUserId);
     setDraftDate(schedule.startAt.slice(0, 10));
+    setDraftFacilityIds(schedule.facilityIds ?? []);
     setDialogOpen(true);
   }
 
@@ -173,6 +184,9 @@ export default function SchedulesPage() {
                 <button className="small-button" type="button" onClick={() => setCalendarBase((current) => addDays(current, -7))}>
                   前週
                 </button>
+                <button className="small-button" type="button" onClick={() => setCalendarBase(new Date())}>
+                  今週
+                </button>
                 <span className="week-label">
                   {weekDays[0]?.date} - {weekDays[6]?.date}
                 </span>
@@ -183,12 +197,14 @@ export default function SchedulesPage() {
             </div>
             <WeekBoard
               users={users}
+              facilities={facilities}
               schedules={items}
               department={department}
               baseDate={calendarBase}
               currentUserId={user?.id}
               onAddSchedule={openNewSchedule}
               onOpenSchedule={openExistingSchedule}
+              onAddFacilitySchedule={openNewFacilitySchedule}
             />
           </>
         ) : null}
@@ -312,6 +328,7 @@ export default function SchedulesPage() {
         facilities={facilities}
         initialUserId={draftUserId}
         initialDate={draftDate}
+        initialFacilityIds={draftFacilityIds}
         schedule={selectedSchedule}
         onClose={() => setDialogOpen(false)}
         onSave={async (payload) => {

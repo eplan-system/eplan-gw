@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
   const [draftUserId, setDraftUserId] = useState("");
   const [draftDate, setDraftDate] = useState(formatDateKey(new Date()));
+  const [draftFacilityIds, setDraftFacilityIds] = useState<string[]>([]);
 
   async function refresh() {
     const [nextUsers, nextSchedules, nextFacilities] = await Promise.all([listUsers(), listSchedules(), listFacilities()]);
@@ -44,6 +45,15 @@ export default function DashboardPage() {
     setSelectedSchedule(null);
     setDraftUserId(userId);
     setDraftDate(dayKey);
+    setDraftFacilityIds([]);
+    setDialogOpen(true);
+  }
+
+  function openNewFacilitySchedule(facilityId: string, dayKey: string) {
+    setSelectedSchedule(null);
+    setDraftUserId(user?.id || users[0]?.id || "");
+    setDraftDate(dayKey);
+    setDraftFacilityIds([facilityId]);
     setDialogOpen(true);
   }
 
@@ -51,6 +61,7 @@ export default function DashboardPage() {
     setSelectedSchedule(schedule);
     setDraftUserId(schedule.ownerUserId);
     setDraftDate(schedule.startAt.slice(0, 10));
+    setDraftFacilityIds(schedule.facilityIds ?? []);
     setDialogOpen(true);
   }
 
@@ -78,6 +89,9 @@ export default function DashboardPage() {
               <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, -7))}>
                 前週
               </button>
+              <button className="small-button" type="button" onClick={() => setWeekBaseDate(new Date())}>
+                今週
+              </button>
               <span className="week-label">
                 {weekDays[0]?.date} - {weekDays[6]?.date}
               </span>
@@ -96,12 +110,14 @@ export default function DashboardPage() {
 
         <WeekBoard
           users={users}
+          facilities={facilities}
           schedules={schedules}
           department={department}
           baseDate={weekBaseDate}
           currentUserId={user?.id}
           onAddSchedule={openNewSchedule}
           onOpenSchedule={openExistingSchedule}
+          onAddFacilitySchedule={openNewFacilitySchedule}
         />
       </section>
 
@@ -134,6 +150,7 @@ export default function DashboardPage() {
         facilities={facilities}
         initialUserId={draftUserId}
         initialDate={draftDate}
+        initialFacilityIds={draftFacilityIds}
         schedule={selectedSchedule}
         onClose={() => setDialogOpen(false)}
         onSave={async (payload) => {

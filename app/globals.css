@@ -120,6 +120,19 @@ button, input, select, textarea { font: inherit; }
   gap: 12px;
 }
 
+.brand-block {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+
+.brand-logo {
+  width: 164px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
 .topbar-title h2 {
   margin: 0;
   font-size: 1.15rem;
@@ -165,6 +178,7 @@ button, input, select, textarea { font: inherit; }
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-self: end;
 }
 
 .mobile-bottom-nav,
@@ -176,17 +190,27 @@ button, input, select, textarea { font: inherit; }
   display: grid;
   gap: 2px;
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: 18px;
   background: white;
   border: 1px solid var(--line);
   font-size: 0.85rem;
+  min-width: 118px;
+}
+
+.session-chip span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.session-chip strong {
+  line-height: 1.2;
 }
 
 .runtime-badge {
   display: inline-flex;
-  padding: 8px 12px;
+  padding: 5px 9px;
   border-radius: 999px;
-  font-size: 0.84rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -482,6 +506,9 @@ button, input, select, textarea { font: inherit; }
 }
 
 .member-cell, .mobile-user-head { display: flex; gap: 10px; align-items: center; }
+.facility-cell-head {
+  background: rgba(245, 240, 231, 0.96);
+}
 .member-meta-block {
   display: grid;
   gap: 2px;
@@ -492,6 +519,7 @@ button, input, select, textarea { font: inherit; }
   font-size: 0.76rem;
 }
 .avatar-dot { width: 14px; height: 14px; border-radius: 999px; flex: none; }
+.facility-dot { background: #9b7b47; }
 .schedule-cell { display: grid; gap: 8px; align-content: start; }
 .schedule-chip, .post-card, .comment-card, .list-row, .mobile-user-card {
   background: white;
@@ -513,6 +541,12 @@ button, input, select, textarea { font: inherit; }
   margin-top: 4px;
   color: var(--accent);
   font-size: 0.76rem;
+}
+.facility-schedule-cell {
+  background: rgba(255, 252, 245, 0.8);
+}
+.facility-chip {
+  background: #fffaf0;
 }
 .empty-label { color: var(--muted); font-size: 0.92rem; }
 .week-board-mobile { display: none; padding: 12px; }
@@ -675,6 +709,10 @@ button, input, select, textarea { font: inherit; }
   grid-column: 1 / -1;
 }
 
+.advanced-fields.collapsed {
+  display: none;
+}
+
 .detail-main {
   align-content: start;
 }
@@ -759,6 +797,10 @@ button, input, select, textarea { font: inherit; }
   align-items: center;
 }
 
+.dialog-card-simple {
+  width: min(700px, 100%);
+}
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 1100px) {
@@ -766,6 +808,9 @@ button, input, select, textarea { font: inherit; }
   .compact-topbar {
     grid-template-columns: 1fr;
     justify-items: start;
+  }
+  .topbar-actions {
+    justify-self: stretch;
   }
   .icon-nav {
     justify-content: flex-start;
@@ -806,7 +851,7 @@ button, input, select, textarea { font: inherit; }
   .topbar-actions {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr auto;
     gap: 6px;
     align-items: center;
   }
@@ -827,6 +872,9 @@ button, input, select, textarea { font: inherit; }
   .ghost-button {
     padding: 8px 12px;
     font-size: 0.78rem;
+  }
+  .brand-logo {
+    width: 132px;
   }
   .dashboard-toolbar {
     gap: 8px;
@@ -1038,6 +1086,9 @@ button, input, select, textarea { font: inherit; }
     max-height: calc(100vh - 12px);
     border-radius: 22px 22px 0 0;
     padding: 14px;
+  }
+  .dialog-card-simple {
+    padding-bottom: 26px;
   }
   .dialog-head {
     margin-bottom: 12px;
