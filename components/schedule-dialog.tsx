@@ -25,6 +25,17 @@ function toLocalDateTime(value: string) {
   return local.toISOString().slice(0, 16);
 }
 
+function toIsoFromLocalDateTime(value: string) {
+  const [datePart, timePart] = value.split("T");
+  if (!datePart || !timePart) {
+    throw new Error("invalid-datetime");
+  }
+
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0).toISOString();
+}
+
 function defaultRange(dateKey: string) {
   return {
     startAt: `${dateKey}T09:00`,
@@ -66,11 +77,14 @@ export function ScheduleDialog({
   const [recurrenceUntil, setRecurrenceUntil] = useState(defaultUntil(initialDate));
   const [weeklyDays, setWeeklyDays] = useState<number[]>([new Date(`${initialDate}T09:00:00`).getDay()]);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!open) return;
 
     if (schedule) {
+      setErrorMessage("");
       setForm({
         id: schedule.id,
         title: schedule.title,
@@ -107,39 +121,56 @@ export function ScheduleDialog({
     setRecurrenceUntil(defaultUntil(initialDate));
     setWeeklyDays([new Date(`${initialDate}T09:00:00`).getDay()]);
     setShowAdvanced(false);
+    setErrorMessage("");
   }, [defaults.endAt, defaults.startAt, initialDate, initialFacilityIds, initialUserId, open, schedule]);
 
   if (!open) return null;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setErrorMessage("");
+    setSaving(true);
 
-    const nextOwnerId = form.ownerUserId || initialUserId || users[0]?.id || "";
-    const participantIds = form.participantUserIds.length ? form.participantUserIds : nextOwnerId ? [nextOwnerId] : [];
+    try {
+      const nextOwnerId = form.ownerUserId || initialUserId || users[0]?.id || "";
+      const participantIds = form.participantUserIds.length ? form.participantUserIds : nextOwnerId ? [nextOwnerId] : [];
+      const startIso = toIsoFromLocalDateTime(form.startAt);
+      const endIso = toIsoFromLocalDateTime(form.endAt);
 
-    const recurrenceRule: RecurrenceRule | null =
-      recurrenceFrequency !== "none"
-        ? {
-            frequency: recurrenceFrequency as Exclude<RecurrenceFrequency, "none">,
-            interval: recurrenceInterval,
-            until: recurrenceUntil,
-            weeklyDays: recurrenceFrequency === "weekly" ? weeklyDays : undefined
-          }
-        : null;
+      if (new Date(startIso) >= new Date(endIso)) {
+        setErrorMessage("終了日時は開始日時より後にしてください。");
+        setSaving(false);
+        return;
+      }
 
-    await onSave({
-      id: schedule?.id,
-      title: form.title.trim(),
-      startAt: new Date(form.startAt).toISOString(),
-      endAt: new Date(form.endAt).toISOString(),
-      ownerUserId: nextOwnerId,
-      participantUserIds: participantIds,
-      facilityIds: form.facilityIds,
-      memo: form.memo.trim(),
-      visibility: form.visibility,
-      seriesId: form.seriesId,
-      recurrenceRule
-    });
+      const recurrenceRule: RecurrenceRule | null =
+        recurrenceFrequency !== "none"
+          ? {
+              frequency: recurrenceFrequency as Exclude<RecurrenceFrequency, "none">,
+              interval: recurrenceInterval,
+              until: recurrenceUntil,
+              weeklyDays: recurrenceFrequency === "weekly" ? weeklyDays : undefined
+            }
+          : null;
+
+      await onSave({
+        id: schedule?.id,
+        title: form.title.trim(),
+        startAt: startIso,
+        endAt: endIso,
+        ownerUserId: nextOwnerId,
+        participantUserIds: participantIds,
+        facilityIds: form.facilityIds,
+        memo: form.memo.trim(),
+        visibility: form.visibility,
+        seriesId: form.seriesId,
+        recurrenceRule
+      });
+    } catch {
+      setErrorMessage("予定の保存に失敗しました。入力内容か Firebase 設定を確認してください。");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const visibilityOptions: { value: ScheduleVisibility; label: string }[] = [
@@ -331,16 +362,33 @@ export function ScheduleDialog({
             </div>
           </div>
 
+          {errorMessage ? <p className="error-text full">{errorMessage}</p> : null}
+
           <div className="dialog-actions full">
             {schedule ? (
-              <button className="small-button danger-button" type="button" onClick={() => onDelete(schedule.id)}>
+              <button
+                className="small-button danger-button"
+                type="button"
+                onClick={async () => {
+                  setErrorMessage("");
+                  setSaving(true);
+                  try {
+                    await onDelete(schedule.id);
+                  } catch {
+                    setErrorMessage("予定の削除に失敗しました。");
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                disabled={saving}
+              >
                 削除
               </button>
             ) : (
               <span />
             )}
-            <button className="primary-button" type="submit">
-              {schedule ? "変更を保存" : "登録する"}
+            <button className="primary-button" type="submit" disabled={saving}>
+              {saving ? "保存中..." : schedule ? "変更を保存" : "登録する"}
             </button>
           </div>
         </form>
