@@ -9,7 +9,6 @@ import { RuntimeBadge } from "@/components/runtime-badge";
 const navItems = [
   { href: "/dashboard", label: "トップ", icon: "TOP" },
   { href: "/schedules", label: "スケジュール", icon: "SCH" },
-  { href: "/facilities", label: "設備予約", icon: "FAC" },
   { href: "/board", label: "掲示板", icon: "BBS" },
   { href: "/admin", label: "管理", icon: "ADM" }
 ];
@@ -26,7 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Image src="/e-plan-logo.jpg" alt="e-PLAN" width={180} height={48} className="brand-logo" priority />
             <h2>社内グループウェア</h2>
           </div>
-          <nav className="icon-nav" aria-label="主要メニュー">
+          <nav className="icon-nav" aria-label="主メニュー">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={pathname === item.href ? "icon-nav-item active" : "icon-nav-item"}>
                 <span className="icon-badge">{item.icon}</span>
