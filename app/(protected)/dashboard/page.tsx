@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { ScheduleDialog } from "@/components/schedule-dialog";
 import { WeekBoard } from "@/components/week-board";
@@ -10,16 +10,15 @@ import { addDays, buildWeekDays, expandRecurringSchedules, formatDateKey, sortUs
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const todayKey = formatDateKey(new Date());
   const [users, setUsers] = useState<AppUser[]>([]);
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [department, setDepartment] = useState("all");
+  const [weekBaseDate, setWeekBaseDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
   const [draftUserId, setDraftUserId] = useState("");
-  const [draftDate, setDraftDate] = useState(() => formatDateKey(new Date()));
-  const [weekBaseDate, setWeekBaseDate] = useState(() => new Date());
+  const [draftDate, setDraftDate] = useState(formatDateKey(new Date()));
 
   async function refresh() {
     const [nextUsers, nextSchedules, nextFacilities] = await Promise.all([listUsers(), listSchedules(), listFacilities()]);
@@ -27,6 +26,7 @@ export default function DashboardPage() {
     setUsers(orderedUsers);
     setSchedules(nextSchedules);
     setFacilities(nextFacilities);
+
     if (!draftUserId && orderedUsers[0]) {
       setDraftUserId(orderedUsers[0].id);
     }
@@ -36,12 +36,27 @@ export default function DashboardPage() {
     void refresh();
   }, [user?.id]);
 
-  const departments = [...new Set(users.map((user) => user.department))];
+  const departments = useMemo(() => [...new Set(users.map((member) => member.department))], [users]);
   const weekDays = buildWeekDays(weekBaseDate);
+  const pendingUsers = users.filter((member) => member.department === "未設定" || !member.mobile);
+
+  function openNewSchedule(userId: string, dayKey: string) {
+    setSelectedSchedule(null);
+    setDraftUserId(userId);
+    setDraftDate(dayKey);
+    setDialogOpen(true);
+  }
+
+  function openExistingSchedule(schedule: ScheduleItem) {
+    setSelectedSchedule(schedule);
+    setDraftUserId(schedule.ownerUserId);
+    setDraftDate(schedule.startAt.slice(0, 10));
+    setDialogOpen(true);
+  }
 
   return (
     <div className="page-stack">
-      <section className="surface-card slim-card">
+      <section className="surface-card">
         <div className="dashboard-toolbar">
           <div>
             <p className="eyebrow">weekly schedule</p>
@@ -63,63 +78,55 @@ export default function DashboardPage() {
               <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, -7))}>
                 前週
               </button>
-              <span className="week-label">{weekDays[0]?.date} - {weekDays[6]?.date}</span>
+              <span className="week-label">
+                {weekDays[0]?.date} - {weekDays[6]?.date}
+              </span>
               <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, 7))}>
                 次週
               </button>
             </div>
-            <button
-              className="small-button"
-              type="button"
-              onClick={() => {
-                setSelectedSchedule(null);
-                setDraftUserId(users[0]?.id ?? "");
-                setDraftDate(todayKey);
-                setDialogOpen(true);
-              }}
-            >
-              ＋ 予定追加
+            <button className="small-button" type="button" onClick={() => openNewSchedule(draftUserId || user?.id || users[0]?.id || "", draftDate)}>
+              ＋予定追加
             </button>
-            <span className="status-badge">{users.length}名 / {schedules.length}件</span>
+            <span className="status-badge">
+              {users.length}名 / {schedules.length}件
+            </span>
           </div>
         </div>
+
         <WeekBoard
           users={users}
           schedules={schedules}
           department={department}
           baseDate={weekBaseDate}
           currentUserId={user?.id}
-          onAddSchedule={(userId, dayKey) => {
-            setSelectedSchedule(null);
-            setDraftUserId(userId);
-            setDraftDate(dayKey);
-            setDialogOpen(true);
-          }}
-          onOpenSchedule={(schedule) => {
-            setSelectedSchedule(schedule);
-            setDraftUserId(schedule.ownerUserId);
-            setDraftDate(schedule.startAt.slice(0, 10));
-            setDialogOpen(true);
-          }}
+          onAddSchedule={openNewSchedule}
+          onOpenSchedule={openExistingSchedule}
         />
-        {users.some((user) => user.department === "未設定") ? (
-          <div className="onboarding-panel">
-            <strong>初期設定待ちのユーザーがあります</strong>
-            <p>
-              Authentication に追加して初回ログインした直後のユーザーは、部署や表示名が未設定のことがあります。
-              `管理` からプロフィールを更新すると一覧表示が整います。
-            </p>
-          </div>
-        ) : null}
-        {users.length === 0 || schedules.length === 0 ? (
-          <div className="onboarding-panel">
-            <strong>スタート準備ガイド</strong>
-            <p>
-              まだデータが少ない状態です。まずは `管理` でプロフィール設定と初期設備投入を行い、そのあと空きセルから最初の予定を登録してください。
-            </p>
-          </div>
-        ) : null}
       </section>
+
+      {pendingUsers.length > 0 ? (
+        <section className="surface-card onboarding-panel">
+          <strong>初期設定待ちのメンバーがあります</strong>
+          <p>
+            {pendingUsers.length}名が「部署未設定」または「携帯番号未設定」です。管理画面から表示名・部署・表示順を揃えると、週間表がさらに見やすくなります。
+          </p>
+        </section>
+      ) : null}
+
+      {users.length === 0 ? (
+        <section className="surface-card onboarding-panel">
+          <strong>最初のメンバー準備</strong>
+          <p>Firebase Authentication でユーザーを作成して一度ログインすると、ここにメンバーとして表示されます。</p>
+        </section>
+      ) : null}
+
+      {facilities.length === 0 ? (
+        <section className="surface-card onboarding-panel">
+          <strong>設備マスターが未投入です</strong>
+          <p>管理画面の「初期設備を投入」を押すと、会議室と車両の候補がまとめて入ります。</p>
+        </section>
+      ) : null}
 
       <ScheduleDialog
         open={dialogOpen}
@@ -131,8 +138,8 @@ export default function DashboardPage() {
         onClose={() => setDialogOpen(false)}
         onSave={async (payload) => {
           if (!payload.id && payload.recurrenceRule) {
-            const items = expandRecurringSchedules(payload as ScheduleDraft);
-            for (const item of items) {
+            const expanded = expandRecurringSchedules(payload as ScheduleDraft);
+            for (const item of expanded) {
               await saveSchedule(item);
             }
           } else {

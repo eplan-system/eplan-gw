@@ -129,7 +129,9 @@ export function WeekBoard({ users, schedules, department, baseDate, currentUserI
                     }}
                   >
                     <div className="mobile-day-head">
-                      <strong>{day.label} {day.date}</strong>
+                      <strong>
+                        {day.label} {day.date}
+                      </strong>
                       <button
                         className="mobile-add-chip"
                         type="button"

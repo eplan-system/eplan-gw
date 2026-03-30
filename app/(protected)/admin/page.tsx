@@ -40,10 +40,7 @@ export default function AdminPage() {
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
 
   const orderedUsers = useMemo(() => sortUsersForDisplay(users, user?.id), [users, user?.id]);
-  const pendingUsers = useMemo(
-    () => orderedUsers.filter((item) => item.department === "未設定" || !item.mobile),
-    [orderedUsers]
-  );
+  const pendingUsers = useMemo(() => orderedUsers.filter((item) => item.department === "未設定" || !item.mobile), [orderedUsers]);
 
   async function refresh() {
     const [nextUsers, nextFacilities] = await Promise.all([listUsers(), listFacilities()]);
@@ -79,7 +76,7 @@ export default function AdminPage() {
       <section className="surface-card">
         <p className="eyebrow">permission</p>
         <h3>管理者のみ利用可能</h3>
-        <p className="muted">一般ユーザーは閲覧できません。</p>
+        <p className="muted">一般ユーザーは管理画面を利用できません。</p>
       </section>
     );
   }
@@ -105,7 +102,7 @@ export default function AdminPage() {
       await refresh();
       setStatusMessage("自分のプロフィールを更新しました。");
     } catch {
-      setErrorMessage("プロフィール更新に失敗しました。Firestore ルールか Firebase 設定を確認してください。");
+      setErrorMessage("プロフィール更新に失敗しました。Firestore ルールや Firebase 設定を確認してください。");
     }
   }
 
@@ -125,7 +122,7 @@ export default function AdminPage() {
       await refresh();
       setStatusMessage("メンバー情報を更新しました。");
     } catch {
-      setErrorMessage("メンバー更新に失敗しました。管理者向け Firestore ルールが反映されているか確認してください。");
+      setErrorMessage("メンバー更新に失敗しました。管理者権限と Firestore ルールを確認してください。");
     } finally {
       setSavingUserId(null);
     }
@@ -153,20 +150,16 @@ export default function AdminPage() {
         <p className="eyebrow">admin note</p>
         <h3>ユーザー管理</h3>
         <p className="muted">
-          ログイン用アカウントの作成は Firebase Authentication 側で行い、表示名、部署、携帯番号、権限、色、表示順などの社内プロフィールは
-          この ADMIN 画面で統一して管理します。
+          ログイン用アカウントの作成は Firebase Authentication 側で行い、表示名・部署・表示順・権限などの社内プロフィールはこの画面で統一して管理します。
         </p>
         <div className="info-strip" style={{ marginTop: 12 }}>
           <strong>運用ルール</strong>
-          <p>
-            Authentication に追加しただけでは一覧に出ません。対象ユーザーが一度ログインすると `Users` にプロフィールが作られ、その後はこの画面から
-            管理者がまとめて整えられます。
-          </p>
+          <p>Authentication に追加しただけでは一覧に出ません。一度ログインすると Users にプロフィールが作られ、その後この画面から整えられます。</p>
         </div>
         {pendingUsers.length > 0 ? (
           <div className="onboarding-panel">
-            <strong>初期設定待ちメンバーがあります</strong>
-            <p>{pendingUsers.length} 名が未設定のままです。初回ログイン後に、この画面で表示名や部署をそろえてください。</p>
+            <strong>初期設定待ちのメンバーがあります</strong>
+            <p>{pendingUsers.length}名が部署または携帯番号未設定です。週間表で見やすくするため、ここでまとめて整えてください。</p>
           </div>
         ) : null}
         {statusMessage ? <p className="success-text">{statusMessage}</p> : null}
@@ -231,12 +224,12 @@ export default function AdminPage() {
         <div className="section-head">
           <div>
             <p className="eyebrow">member editor</p>
-            <h3>登録ユーザーの社内プロフィール編集</h3>
+            <h3>登録メンバーの表示情報</h3>
           </div>
           <span className="status-badge">{orderedUsers.length}名</span>
         </div>
         <p className="muted">
-          ここで編集できるのは `Users` の表示情報です。並び順は、ログイン中の本人が常に一番上で、その下をこの数値順に表示します。
+          ここで編集できるのは Users コレクションの表示用プロフィールです。本人がログイン中でも、管理者が名前・部署・権限・表示順を統一できます。
         </p>
         <div className="editable-user-stack">
           {orderedUsers.map((item) => {

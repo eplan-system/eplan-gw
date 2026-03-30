@@ -228,14 +228,9 @@ export default function SchedulesPage() {
                 return (
                   <div
                     key={day.key}
-                    className={
-                      [
-                        "month-cell",
-                        "month-cell-interactive",
-                        !day.isCurrentMonth ? "month-cell-muted" : "",
-                        isTodayKey(day.key) ? "today-cell" : ""
-                      ].filter(Boolean).join(" ")
-                    }
+                    className={["month-cell", "month-cell-interactive", !day.isCurrentMonth ? "month-cell-muted" : "", isTodayKey(day.key) ? "today-cell" : ""]
+                      .filter(Boolean)
+                      .join(" ")}
                     onClick={() => openNewSchedule(targetUserId, day.key)}
                     role="button"
                     tabIndex={0}
@@ -265,8 +260,8 @@ export default function SchedulesPage() {
                                 openExistingSchedule(item);
                               }}
                             >
-                              <span>{new Date(item.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}</span>
                               <strong>{visible.title}</strong>
+                              <span>{new Date(item.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}</span>
                             </button>
                           );
                         })
@@ -283,9 +278,7 @@ export default function SchedulesPage() {
 
         {mode !== "team-week" && mode !== "personal-month" ? (
           <div className="list-stack">
-            <p className="muted">
-              {mode === "personal-week" ? "選択ユーザーの今週予定を一覧で確認できます。" : "選択日の予定を一覧で確認できます。"}
-            </p>
+            <p className="muted">{mode === "personal-week" ? "選択中の週の予定を一覧で確認できます。" : "選択中の日の予定を一覧で確認できます。"}</p>
             {filteredSchedules.map((item) => {
               const visible = presentSchedule(item, user?.id);
               if (!visible) return null;
@@ -295,7 +288,7 @@ export default function SchedulesPage() {
                   <strong>{visible.title}</strong>
                   <div className="list-meta">
                     <span>{formatDateTime(item.startAt)}</span>
-                    <span>作成者 {userNameById(users, item.ownerUserId)}</span>
+                    <span>作成者: {userNameById(users, item.ownerUserId)}</span>
                   </div>
                   {visible.memo ? <p className="muted">{visible.memo}</p> : null}
                 </article>
@@ -306,11 +299,10 @@ export default function SchedulesPage() {
       </section>
 
       <section className="surface-card">
-        <p className="eyebrow">schedule note</p>
-        <h3>予定登録について</h3>
+        <p className="eyebrow">schedule tips</p>
+        <h3>使い方メモ</h3>
         <p className="muted">
-          予定追加機能はすでに実装済みです。`トップ` の週間表、`予定` の全体週間、個人月間の各日セルから同じ登録ダイアログで入力できます。
-          `iCal出力` はログイン中の自分の予定を書き出すので、Google カレンダーへインポートして使えます。
+          予定入力はトップと予定画面の両方から行えます。全体週間では全員の空き状況を見ながら登録でき、個人月間では一か月の流れをざっと確認できます。iCal出力では、ログイン中の自分に関係する予定を Google カレンダーへ取り込めます。
         </p>
       </section>
 
