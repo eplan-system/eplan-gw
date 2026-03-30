@@ -9,6 +9,7 @@ type Props = {
   open: boolean;
   users: AppUser[];
   facilities: Facility[];
+  currentUserId: string;
   initialUserId: string;
   initialDate: string;
   initialFacilityIds?: string[];
@@ -53,6 +54,7 @@ export function ScheduleDialog({
   open,
   users,
   facilities,
+  currentUserId,
   initialUserId,
   initialDate,
   initialFacilityIds = [],
@@ -62,12 +64,14 @@ export function ScheduleDialog({
   onDelete
 }: Props) {
   const defaults = defaultRange(initialDate);
+  const defaultOwnerUserId = currentUserId || initialUserId || users[0]?.id || "";
+  const defaultParticipantUserIds = initialUserId ? [initialUserId] : defaultOwnerUserId ? [defaultOwnerUserId] : [];
   const [form, setForm] = useState<ScheduleDraft>({
     title: "",
     startAt: defaults.startAt,
     endAt: defaults.endAt,
-    ownerUserId: initialUserId,
-    participantUserIds: initialUserId ? [initialUserId] : [],
+    ownerUserId: defaultOwnerUserId,
+    participantUserIds: defaultParticipantUserIds,
     facilityIds: initialFacilityIds,
     memo: "",
     visibility: "public"
@@ -114,8 +118,8 @@ export function ScheduleDialog({
       title: "",
       startAt: defaults.startAt,
       endAt: defaults.endAt,
-      ownerUserId: initialUserId,
-      participantUserIds: initialUserId ? [initialUserId] : [],
+      ownerUserId: defaultOwnerUserId,
+      participantUserIds: defaultParticipantUserIds,
       facilityIds: initialFacilityIds,
       memo: "",
       visibility: "public"
@@ -128,7 +132,7 @@ export function ScheduleDialog({
     setWeeklyDays([new Date(`${initialDate}T09:00:00`).getDay()]);
     setShowAdvanced(false);
     setErrorMessage("");
-  }, [defaults.endAt, defaults.startAt, initialDate, initialFacilityIds, initialUserId, open, schedule]);
+  }, [defaultOwnerUserId, defaultParticipantUserIds, defaults.endAt, defaults.startAt, initialDate, initialFacilityIds, initialUserId, open, schedule]);
 
   if (!open) return null;
 
@@ -138,8 +142,9 @@ export function ScheduleDialog({
     setSaving(true);
 
     try {
-      const nextOwnerId = form.ownerUserId || initialUserId || users[0]?.id || "";
-      const participantIds = form.participantUserIds.length ? form.participantUserIds : nextOwnerId ? [nextOwnerId] : [];
+      const nextOwnerId = form.ownerUserId || currentUserId || initialUserId || users[0]?.id || "";
+      const fallbackParticipantId = initialUserId || nextOwnerId;
+      const participantIds = form.participantUserIds.length ? form.participantUserIds : fallbackParticipantId ? [fallbackParticipantId] : [];
       const startIso = toIsoFromLocalDateTime(form.startAt);
       const endIso = toIsoFromLocalDateTime(form.endAt);
 

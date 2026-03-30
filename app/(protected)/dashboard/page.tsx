@@ -148,6 +148,7 @@ export default function DashboardPage() {
         open={dialogOpen}
         users={users}
         facilities={facilities}
+        currentUserId={user?.id || ""}
         initialUserId={draftUserId}
         initialDate={draftDate}
         initialFacilityIds={draftFacilityIds}

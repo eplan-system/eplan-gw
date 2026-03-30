@@ -334,6 +334,7 @@ export default function SchedulesPage() {
         open={dialogOpen}
         users={users}
         facilities={facilities}
+        currentUserId={user?.id || ""}
         initialUserId={draftUserId}
         initialDate={draftDate}
         initialFacilityIds={draftFacilityIds}
