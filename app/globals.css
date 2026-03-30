@@ -653,6 +653,28 @@ button, input, select, textarea { font: inherit; }
   gap: 18px;
 }
 
+.compact-summary-strip {
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.mobile-advanced-toggle-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.mobile-advanced-toggle {
+  width: 100%;
+}
+
+.advanced-fields {
+  display: grid;
+  gap: 12px;
+  grid-column: 1 / -1;
+}
+
 .detail-main {
   align-content: start;
 }
@@ -1006,5 +1028,50 @@ button, input, select, textarea { font: inherit; }
   }
   .detail-layout {
     grid-template-columns: 1fr;
+  }
+  .dialog-backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+  .dialog-card {
+    width: 100%;
+    max-height: calc(100vh - 12px);
+    border-radius: 22px 22px 0 0;
+    padding: 14px;
+  }
+  .dialog-head {
+    margin-bottom: 12px;
+  }
+  .dialog-head h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+  .detail-side {
+    display: none;
+  }
+  .compact-summary-strip {
+    padding: 10px 12px;
+  }
+  .compact-summary-strip .chip-list {
+    gap: 6px;
+  }
+  .compact-summary-strip .detail-chip {
+    font-size: 0.76rem;
+    padding: 7px 9px;
+  }
+  .recurrence-box {
+    padding: 12px;
+  }
+  .advanced-fields {
+    gap: 10px;
+  }
+  .field textarea {
+    min-height: 110px;
+  }
+  .dialog-actions {
+    position: sticky;
+    bottom: -14px;
+    background: #fffdf9;
+    padding-top: 10px;
   }
 }
