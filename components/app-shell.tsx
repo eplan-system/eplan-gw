@@ -39,8 +39,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <strong>{user?.name ?? "未設定"}</strong>
               <span>{user?.department ?? "未設定"}</span>
             </div>
-            <button className="ghost-button" onClick={() => signOut()}>
-              ログアウト
+            <button className="ghost-button compact-logout" onClick={() => signOut()} aria-label="ログアウト">
+              退出
             </button>
           </div>
         </header>
