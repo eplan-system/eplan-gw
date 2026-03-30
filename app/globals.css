@@ -481,7 +481,7 @@ button, input, select, textarea { font: inherit; }
   font-size: 0.76rem;
 }
 .empty-label { color: var(--muted); font-size: 0.92rem; }
-.week-board-mobile { display: none; padding: 16px; }
+.week-board-mobile { display: none; padding: 12px; }
 .empty-cell-button,
 .add-cell-button {
   width: 100%;
@@ -504,14 +504,70 @@ button, input, select, textarea { font: inherit; }
   font-size: 0.85rem;
 }
 
-.mobile-day-row { display: grid; gap: 8px; }
+.mobile-user-title {
+  display: grid;
+  gap: 2px;
+}
+
+.mobile-user-title span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.mobile-day-row {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(222, 209, 192, 0.86);
+}
+
+.mobile-day-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-add-chip {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mobile-schedule-list {
+  display: grid;
+  gap: 8px;
+}
+
 .mobile-schedule-button {
   width: 100%;
   text-align: left;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 10px 12px;
   background: white;
+}
+
+.mobile-schedule-button span {
+  display: block;
+  font-weight: 700;
+}
+
+.mobile-schedule-button small {
+  color: var(--muted);
+}
+
+.mobile-empty-text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .form-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -661,15 +717,76 @@ button, input, select, textarea { font: inherit; }
 }
 
 @media (max-width: 780px) {
-  .app-shell { padding: 12px; }
+  .app-shell { padding: 10px 10px 18px; }
   .week-board-desktop { display: none; }
   .week-board-mobile { display: block; }
   .form-grid { grid-template-columns: 1fr; }
   .compact-form-grid { grid-template-columns: 1fr; }
   .month-grid { grid-template-columns: 1fr; }
+  .topbar {
+    padding: 12px;
+    border-radius: 22px;
+  }
+  .topbar-title .eyebrow {
+    margin-bottom: 2px;
+  }
+  .topbar-title h2 {
+    font-size: 1.05rem;
+  }
+  .icon-nav {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    justify-content: flex-start;
+  }
+  .icon-nav-item {
+    min-width: 72px;
+    padding: 8px 8px 10px;
+    gap: 4px;
+    flex: 0 0 auto;
+  }
+  .icon-nav-item span:last-child {
+    font-size: 0.78rem;
+  }
   .topbar-actions {
     width: 100%;
     justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .session-chip {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+  .ghost-button {
+    padding: 10px 14px;
+  }
+  .dashboard-toolbar {
+    gap: 10px;
+  }
+  .dashboard-toolbar h3 {
+    font-size: 1.05rem;
+    margin: 0;
+  }
+  .toolbar-group {
+    width: 100%;
+    gap: 8px;
+  }
+  .compact-filter,
+  .week-switcher,
+  .status-badge {
+    width: 100%;
+  }
+  .week-switcher {
+    justify-content: space-between;
+  }
+  .week-label {
+    flex: 1;
+    text-align: center;
+  }
+  .small-button {
+    padding: 11px 14px;
   }
   .detail-layout {
     grid-template-columns: 1fr;

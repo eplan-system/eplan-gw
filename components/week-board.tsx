@@ -89,7 +89,7 @@ export function WeekBoard({ users, schedules, department, baseDate, currentUserI
                       );
                     })
                   ) : (
-                    <div className="cell-placeholder">クリックで追加</div>
+                    <div className="cell-placeholder">タップして追加</div>
                   )}
                 </div>
               );
@@ -103,20 +103,46 @@ export function WeekBoard({ users, schedules, department, baseDate, currentUserI
           <section key={user.id} className="mobile-user-card">
             <div className="mobile-user-head">
               <div className="avatar-dot" style={{ background: user.color }} />
-              <div>
+              <div className="mobile-user-title">
                 <strong>{user.name}</strong>
                 <span>{user.department}</span>
               </div>
             </div>
             <div className="mobile-day-list">
               {weekDays.map((day) => {
-                const daySchedules = schedulesForUserOnDay(schedules, user.id, day.key).filter((schedule) => presentSchedule(schedule, currentUserId));
+                const daySchedules = schedulesForUserOnDay(schedules, user.id, day.key)
+                  .filter((schedule) => presentSchedule(schedule, currentUserId))
+                  .sort((left, right) => left.startAt.localeCompare(right.startAt));
 
                 return (
-                  <div key={`${user.id}-${day.key}`} className="mobile-day-row">
-                    <strong>{day.label} {day.date}</strong>
+                  <div
+                    key={`${user.id}-${day.key}`}
+                    className={isTodayKey(day.key) ? "mobile-day-row today-cell" : "mobile-day-row"}
+                    onClick={() => onAddSchedule(user.id, day.key)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onAddSchedule(user.id, day.key);
+                      }
+                    }}
+                  >
+                    <div className="mobile-day-head">
+                      <strong>{day.label} {day.date}</strong>
+                      <button
+                        className="mobile-add-chip"
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onAddSchedule(user.id, day.key);
+                        }}
+                      >
+                        ＋追加
+                      </button>
+                    </div>
                     {daySchedules.length ? (
-                      <>
+                      <div className="mobile-schedule-list">
                         {daySchedules.map((schedule) => {
                           const visible = presentSchedule(schedule, currentUserId);
                           if (!visible) return null;
@@ -126,21 +152,23 @@ export function WeekBoard({ users, schedules, department, baseDate, currentUserI
                               key={schedule.id}
                               className="mobile-schedule-button"
                               type="button"
-                              onClick={() => onOpenSchedule(schedule)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onOpenSchedule(schedule);
+                              }}
                             >
                               <span>{visible.title}</span>
-                              <small>{new Date(schedule.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}</small>
+                              <small>
+                                {new Date(schedule.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                                {" - "}
+                                {new Date(schedule.endAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                              </small>
                             </button>
                           );
                         })}
-                        <button className="small-button" type="button" onClick={() => onAddSchedule(user.id, day.key)}>
-                          この日に追加
-                        </button>
-                      </>
+                      </div>
                     ) : (
-                      <button className="small-button" type="button" onClick={() => onAddSchedule(user.id, day.key)}>
-                        この日に追加
-                      </button>
+                      <p className="mobile-empty-text">予定なし。タップして追加</p>
                     )}
                   </div>
                 );
