@@ -1,25 +1,36 @@
 # Office Hub MVP
 
-小規模会社向けの社内グループウェア MVP です。Next.js + Firebase を前提にしつつ、Firebase 環境変数が未設定でもローカルデモとして動くようにしてあります。
+社内向けの小規模グループウェア MVP です。  
+`Next.js + Firebase` を前提に、スマホでも見やすい予定確認を重視して作っています。
 
-## 主な実装内容
+## 主な機能
 
-- メールアドレス + パスワードのログイン画面
-- ログイン必須の保護ルート
-- 社員 x 週間のトップ画面
-- 予定登録、設備予約、掲示板、ユーザー管理
-- スマホでは一覧を担当者カード中心に最適化
+- メールアドレス + パスワードでのログイン
+- 全体週間表示
+- 個人月間 / 個人週間 / 個人日表示
+- 予定の作成 / 編集 / 削除
+- 繰り返し予定
+- 設備予約
+- 掲示板
+- 管理画面でのプロフィール / 表示順調整
 
-## 起動手順
+## ローカル起動
 
 1. `npm install`
-2. `.env.example` を `.env.local` にコピーして Firebase 設定を入れる
-3. `npm run dev`
-4. `http://localhost:3000` を開く
+2. `.env.example` を元に `.env.local` を作成
+3. Firebase の設定値を `.env.local` に入力
+4. `npm run dev`
+5. `http://localhost:3000` を開く
 
-Firebase 未設定でも、デモデータでローカル確認できます。
+## 本番前の確認
 
-## まず読む資料
+- Firebase Authentication を有効化
+- Firestore を作成
+- Firestore ルールを反映
+- 初期設備を投入
+- 管理画面でユーザー表示名 / 部署 / 表示順を調整
+
+## ドキュメント
 
 - `docs/firebase-setup.md`
 - `docs/startup-checklist.md`
