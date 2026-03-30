@@ -8,7 +8,6 @@ import { deleteSchedule, listFacilities, listSchedules, listUsers, saveSchedule 
 import { AppUser, Facility, ScheduleDraft, ScheduleItem, ScheduleViewMode } from "@/lib/types";
 import {
   addDays,
-  buildIcsFile,
   buildMonthDays,
   buildWeekDays,
   canViewSchedule,
@@ -116,18 +115,26 @@ export default function SchedulesPage() {
     setDialogOpen(true);
   }
 
-  function downloadIcs() {
-    if (!user) return;
-    const content = buildIcsFile(ownSchedules, `${user.name}-schedule`);
-    const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "my-schedule.ics";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+  function addToGoogleCalendar() {
+    const target = ownSchedules[0];
+    if (!target) return;
+
+    const formatGoogleDate = (value: string) =>
+      new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+
+    const location = target.facilityIds?.length
+      ? facilities.filter((item) => target.facilityIds.includes(item.id)).map((item) => item.name).join(" / ")
+      : "";
+
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: target.title,
+      dates: `${formatGoogleDate(target.startAt)}/${formatGoogleDate(target.endAt)}`,
+      details: target.memo || "",
+      location
+    });
+
+    window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -146,8 +153,8 @@ export default function SchedulesPage() {
                 </button>
               ))}
             </div>
-            <button className="small-button" type="button" onClick={downloadIcs}>
-              iCal出力
+            <button className="small-button" type="button" onClick={addToGoogleCalendar} disabled={!ownSchedules.length}>
+              Google カレンダーへ追加
             </button>
             {mode === "team-week" ? (
               <label className="compact-filter">
@@ -259,6 +266,7 @@ export default function SchedulesPage() {
                   >
                     <div className="month-cell-top">
                       <strong>{day.day}</strong>
+                      <span>{day.label}</span>
                     </div>
                     <div className="month-schedule-list">
                       {daySchedules.length ? (
@@ -282,7 +290,7 @@ export default function SchedulesPage() {
                           );
                         })
                       ) : (
-                        <div className="cell-placeholder">クリックで追加</div>
+                        <div className="cell-placeholder">＋</div>
                       )}
                     </div>
                   </div>
@@ -304,7 +312,7 @@ export default function SchedulesPage() {
                   <strong>{visible.title}</strong>
                   <div className="list-meta">
                     <span>{formatDateTime(item.startAt)}</span>
-                    <span>作成者: {userNameById(users, item.ownerUserId)}</span>
+                    <span>登録者: {userNameById(users, item.ownerUserId)}</span>
                   </div>
                   {visible.memo ? <p className="muted">{visible.memo}</p> : null}
                 </article>
@@ -316,9 +324,9 @@ export default function SchedulesPage() {
 
       <section className="surface-card">
         <p className="eyebrow">schedule tips</p>
-        <h3>使い方メモ</h3>
+        <h3>Google カレンダー連携について</h3>
         <p className="muted">
-          予定入力はトップと予定画面の両方から行えます。全体週間では全員の空き状況を見ながら登録でき、個人月間では一か月の流れをざっと確認できます。iCal出力では、ログイン中の自分に関係する予定を Google カレンダーへ取り込めます。
+          このボタンは、ログイン中の自分に関係する先頭の予定を Google カレンダーの登録画面へ渡します。完全な双方向同期ではありませんが、よく使う「Google カレンダーへ追加」の導線として使えます。
         </p>
       </section>
 

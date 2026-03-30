@@ -311,15 +311,18 @@ button, input, select, textarea { font: inherit; }
 
 .month-cell-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: 8px;
+  text-align: center;
+  flex-direction: column;
 }
 
 .month-cell-header {
   min-height: auto;
   text-align: center;
   background: #f4eee4;
+  place-items: center;
 }
 
 .month-cell-muted {
@@ -791,6 +794,94 @@ button, input, select, textarea { font: inherit; }
 .onboarding-panel strong {
   display: block;
   margin-bottom: 6px;
+}
+
+.board-layout {
+  align-items: start;
+}
+
+.board-compose-card,
+.board-feed-card {
+  min-width: 0;
+}
+
+.board-compose-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+
+.board-pin-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+}
+
+.board-feed-list {
+  gap: 14px;
+}
+
+.board-post-card {
+  display: grid;
+  gap: 14px;
+  border-radius: 20px;
+}
+
+.board-post-head {
+  display: grid;
+  gap: 8px;
+}
+
+.board-post-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.board-post-meta {
+  justify-content: space-between;
+}
+
+.board-post-body,
+.board-comment-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.board-comment-list {
+  gap: 10px;
+}
+
+.board-comment-card {
+  background: #faf7f0;
+  border-radius: 14px;
+}
+
+.board-comment-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.board-comment-form {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(221, 209, 192, 0.8);
+}
+
+.board-comment-form textarea {
+  min-height: 92px;
+  resize: vertical;
 }
 
 .dialog-head {
