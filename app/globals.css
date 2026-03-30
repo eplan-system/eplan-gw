@@ -160,6 +160,11 @@ button, input, select, textarea { font: inherit; }
   gap: 10px;
 }
 
+.mobile-bottom-nav,
+.mobile-bottom-spacer {
+  display: none;
+}
+
 .session-chip {
   display: grid;
   gap: 2px;
@@ -244,6 +249,7 @@ button, input, select, textarea { font: inherit; }
 .month-view-card {
   display: grid;
   gap: 12px;
+  overflow-x: auto;
 }
 
 .month-grid {
@@ -258,6 +264,7 @@ button, input, select, textarea { font: inherit; }
 
 .month-cell {
   min-height: 130px;
+  min-width: 0;
   padding: 10px;
   border-radius: 16px;
   border: 1px solid var(--line);
@@ -722,7 +729,6 @@ button, input, select, textarea { font: inherit; }
   .week-board-mobile { display: block; }
   .form-grid { grid-template-columns: 1fr; }
   .compact-form-grid { grid-template-columns: 1fr; }
-  .month-grid { grid-template-columns: 1fr; }
   .topbar {
     padding: 12px;
     border-radius: 22px;
@@ -733,13 +739,7 @@ button, input, select, textarea { font: inherit; }
   .topbar-title h2 {
     font-size: 1.05rem;
   }
-  .icon-nav {
-    width: 100%;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    justify-content: flex-start;
-  }
+  .icon-nav { display: none; }
   .icon-nav-item {
     min-width: 72px;
     padding: 8px 8px 10px;
@@ -755,11 +755,24 @@ button, input, select, textarea { font: inherit; }
     gap: 8px;
     flex-wrap: wrap;
   }
+  .runtime-badge {
+    order: 1;
+  }
   .session-chip {
+    order: 2;
     padding: 8px 10px;
     font-size: 0.8rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .session-chip strong,
+  .session-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .ghost-button {
+    order: 3;
     padding: 10px 14px;
   }
   .dashboard-toolbar {
@@ -787,6 +800,85 @@ button, input, select, textarea { font: inherit; }
   }
   .small-button {
     padding: 11px 14px;
+  }
+  .tab-list {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .tab-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .month-view-card {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .month-grid {
+    grid-template-columns: repeat(7, minmax(88px, 1fr));
+    min-width: 700px;
+  }
+  .month-cell {
+    min-height: 112px;
+    padding: 8px;
+  }
+  .month-schedule-chip {
+    padding: 7px 8px;
+  }
+  .month-schedule-chip strong {
+    font-size: 0.82rem;
+  }
+  .cell-placeholder {
+    min-height: 38px;
+    font-size: 0.8rem;
+  }
+  .mobile-bottom-nav {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px;
+    background: rgba(255, 253, 248, 0.96);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.82);
+    box-shadow: var(--shadow);
+    border-radius: 20px;
+    z-index: 30;
+  }
+  .mobile-bottom-item {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+  .mobile-bottom-item.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .mobile-bottom-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: #f4eee4;
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+  .mobile-bottom-item.active .mobile-bottom-icon {
+    background: rgba(11, 118, 97, 0.1);
+    border-color: rgba(11, 118, 97, 0.25);
+  }
+  .mobile-bottom-spacer {
+    display: block;
+    height: 86px;
   }
   .detail-layout {
     grid-template-columns: 1fr;

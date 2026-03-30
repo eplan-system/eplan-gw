@@ -26,18 +26,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <h2>社内グループウェア</h2>
           </div>
           <nav className="icon-nav">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className={pathname === item.href ? "icon-nav-item active" : "icon-nav-item"}>
-              <span className="icon-badge">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href} className={pathname === item.href ? "icon-nav-item active" : "icon-nav-item"}>
+                <span className="icon-badge">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
           </nav>
           <div className="topbar-actions">
             <RuntimeBadge />
             <div className="session-chip">
-              <strong>{user?.name}</strong>
-              <span>{user?.department}</span>
+              <strong>{user?.name ?? "未設定"}</strong>
+              <span>{user?.department ?? "未設定"}</span>
             </div>
             <button className="ghost-button" onClick={() => signOut()}>
               ログアウト
@@ -45,6 +45,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main>{children}</main>
+        <nav className="mobile-bottom-nav" aria-label="スマホメニュー">
+          {navItems.map((item) => (
+            <Link key={item.href} href={item.href} className={pathname === item.href ? "mobile-bottom-item active" : "mobile-bottom-item"}>
+              <span className="mobile-bottom-icon">{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+        <div className="mobile-bottom-spacer" />
       </div>
     </div>
   );
