@@ -75,30 +75,42 @@ export function WeekBoard({
                   }}
                 >
                   {daySchedules.length ? (
-                    daySchedules.map((schedule) => {
-                      const visible = presentSchedule(schedule, currentUserId);
-                      if (!visible) return null;
+                    <>
+                      {daySchedules.map((schedule) => {
+                        const visible = presentSchedule(schedule, currentUserId);
+                        if (!visible) return null;
 
-                      return (
-                        <button
-                          key={schedule.id}
-                          className="schedule-chip schedule-button"
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onOpenSchedule(schedule);
-                          }}
-                        >
-                          <strong>{visible.title}</strong>
-                          <span>
-                            {new Date(schedule.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                            {" - "}
-                            {new Date(schedule.endAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                          {schedule.facilityIds?.length ? <small>設備 {schedule.facilityIds.length}件</small> : null}
-                        </button>
-                      );
-                    })
+                        return (
+                          <button
+                            key={schedule.id}
+                            className="schedule-chip schedule-button"
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onOpenSchedule(schedule);
+                            }}
+                          >
+                            <strong>{visible.title}</strong>
+                            <span>
+                              {new Date(schedule.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                              {" - "}
+                              {new Date(schedule.endAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                            {schedule.facilityIds?.length ? <small>設備 {schedule.facilityIds.length}件</small> : null}
+                          </button>
+                        );
+                      })}
+                      <button
+                        className="add-cell-button"
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onAddSchedule(user.id, day.key);
+                        }}
+                      >
+                        ＋登録
+                      </button>
+                    </>
                   ) : (
                     <div className="cell-placeholder">クリックで登録</div>
                   )}
@@ -138,29 +150,41 @@ export function WeekBoard({
                   }}
                 >
                   {daySchedules.length ? (
-                    daySchedules.map((schedule) => {
-                      const visible = presentSchedule(schedule, currentUserId);
-                      if (!visible) return null;
+                    <>
+                      {daySchedules.map((schedule) => {
+                        const visible = presentSchedule(schedule, currentUserId);
+                        if (!visible) return null;
 
-                      return (
-                        <button
-                          key={schedule.id}
-                          className="schedule-chip schedule-button facility-chip"
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onOpenSchedule(schedule);
-                          }}
-                        >
-                          <strong>{visible.title}</strong>
-                          <span>
-                            {new Date(schedule.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                            {" - "}
-                            {new Date(schedule.endAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                        </button>
-                      );
-                    })
+                        return (
+                          <button
+                            key={schedule.id}
+                            className="schedule-chip schedule-button facility-chip"
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onOpenSchedule(schedule);
+                            }}
+                          >
+                            <strong>{visible.title}</strong>
+                            <span>
+                              {new Date(schedule.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                              {" - "}
+                              {new Date(schedule.endAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      <button
+                        className="add-cell-button"
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onAddFacilitySchedule?.(facility.id, day.key);
+                        }}
+                      >
+                        ＋登録
+                      </button>
+                    </>
                   ) : (
                     <div className="cell-placeholder">クリックで登録</div>
                   )}
