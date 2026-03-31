@@ -132,7 +132,7 @@ export function ScheduleDialog({
     setWeeklyDays([new Date(`${initialDate}T09:00:00`).getDay()]);
     setShowAdvanced(false);
     setErrorMessage("");
-  }, [defaultOwnerUserId, defaultParticipantUserIds, defaults.endAt, defaults.startAt, initialDate, initialFacilityIds, initialUserId, open, schedule]);
+  }, [defaultOwnerUserId, defaultParticipantUserIds, defaults.endAt, defaults.startAt, initialDate, initialFacilityIds, open, schedule]);
 
   if (!open) return null;
 
@@ -142,7 +142,7 @@ export function ScheduleDialog({
     setSaving(true);
 
     try {
-      const nextOwnerId = form.ownerUserId || currentUserId || initialUserId || users[0]?.id || "";
+      const nextOwnerId = currentUserId || form.ownerUserId || initialUserId || users[0]?.id || "";
       const fallbackParticipantId = initialUserId || nextOwnerId;
       const participantIds = form.participantUserIds.length ? form.participantUserIds : fallbackParticipantId ? [fallbackParticipantId] : [];
       const startIso = toIsoFromLocalDateTime(form.startAt);
@@ -198,7 +198,7 @@ export function ScheduleDialog({
         <div className="dialog-head">
           <div>
             <p className="eyebrow">{schedule ? "edit schedule" : "new schedule"}</p>
-            <h3>{schedule ? "予定の変更" : "予定の登録"}</h3>
+            <h3>{schedule ? "予定の編集" : "予定の登録"}</h3>
           </div>
           <button className="small-button" type="button" onClick={onClose}>
             閉じる
@@ -207,7 +207,7 @@ export function ScheduleDialog({
 
         <form className="form-grid detail-main" onSubmit={handleSubmit}>
           <label className="field full">
-            <span>件名</span>
+            <span>タイトル</span>
             <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="予定名を入力" required />
           </label>
 
@@ -219,26 +219,6 @@ export function ScheduleDialog({
           <label className="field">
             <span>終了日時</span>
             <input type="datetime-local" step={300} value={form.endAt} onChange={(event) => setForm({ ...form, endAt: event.target.value })} required />
-          </label>
-
-          <label className="field">
-            <span>登録者</span>
-            <select
-              value={form.ownerUserId}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  ownerUserId: event.target.value,
-                  participantUserIds: current.participantUserIds.length ? current.participantUserIds : [event.target.value]
-                }))
-              }
-            >
-              {users.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name} / {member.department}
-                </option>
-              ))}
-            </select>
           </label>
 
           <label className="field">
