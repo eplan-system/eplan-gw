@@ -186,7 +186,7 @@ export default function AdminPage() {
         <p className="eyebrow">my profile</p>
         <h3>プロフィール変更</h3>
         <div className="settings-form-wrap">
-          <form className="form-grid" onSubmit={handleProfileSave}>
+          <form className="form-grid settings-inline-grid" onSubmit={handleProfileSave}>
             <label className="field">
               <span>表示名</span>
               <input value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} required />
@@ -209,7 +209,7 @@ export default function AdminPage() {
               <span>色</span>
               <input type="color" value={profileForm.color} onChange={(event) => setProfileForm({ ...profileForm, color: event.target.value })} />
             </label>
-            <div className="full">
+            <div className="full settings-action-row">
               <button className="primary-button" type="submit">
                 プロフィールを保存
               </button>
@@ -223,7 +223,7 @@ export default function AdminPage() {
         <h3>パスワード変更</h3>
         <p className="muted">変更後は Firebase Authentication のログイン用パスワードも更新されます。</p>
         <div className="settings-form-wrap">
-          <form className="form-grid compact-form-grid" onSubmit={handlePasswordSave}>
+          <form className="form-grid compact-form-grid settings-inline-grid" onSubmit={handlePasswordSave}>
             <label className="field">
               <span>現在のパスワード</span>
               <input
@@ -251,7 +251,7 @@ export default function AdminPage() {
                 required
               />
             </label>
-            <div className="full">
+            <div className="full settings-action-row">
               <button className="primary-button" type="submit">
                 パスワードを変更
               </button>

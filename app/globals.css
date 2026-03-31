@@ -257,7 +257,26 @@ button, input, select, textarea { font: inherit; }
 }
 
 .settings-form-wrap {
-  width: min(980px, 100%);
+  width: min(900px, 100%);
+}
+
+.settings-inline-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+}
+
+.settings-inline-grid .field {
+  margin-bottom: 0;
+}
+
+.settings-inline-grid .field span {
+  margin-bottom: 8px;
+}
+
+.settings-action-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .editable-user-stack {
@@ -1023,6 +1042,8 @@ button, input, select, textarea { font: inherit; }
   .week-board-mobile { display: none; }
   .form-grid { grid-template-columns: 1fr; }
   .compact-form-grid { grid-template-columns: 1fr; }
+  .settings-inline-grid { grid-template-columns: 1fr; }
+  .settings-action-row { justify-content: flex-start; }
   .topbar {
     padding: 10px 12px;
     border-radius: 18px;
