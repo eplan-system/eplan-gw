@@ -39,7 +39,6 @@ export default function DashboardPage() {
 
   const departments = useMemo(() => [...new Set(users.map((member) => member.department))], [users]);
   const weekDays = buildWeekDays(weekBaseDate);
-  const pendingUsers = users.filter((member) => member.department === "未設定" || !member.mobile);
 
   function openNewSchedule(userId: string, dayKey: string) {
     setSelectedSchedule(null);
@@ -117,13 +116,6 @@ export default function DashboardPage() {
           onAddFacilitySchedule={openNewFacilitySchedule}
         />
       </section>
-
-      {pendingUsers.length > 0 ? (
-        <section className="surface-card onboarding-panel">
-          <strong>初期設定待ちのメンバーがあります</strong>
-          <p>{pendingUsers.length}名が部署または携帯番号未設定です。表示設定から整えると、週表示がさらに見やすくなります。</p>
-        </section>
-      ) : null}
 
       {users.length === 0 ? (
         <section className="surface-card onboarding-panel">
