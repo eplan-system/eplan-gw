@@ -8,6 +8,7 @@ import {
   isSaturdayKey,
   isSundayKey,
   isTodayKey,
+  localDateKeyFromIso,
   presentSchedule,
   scheduleIntersectsDay,
   schedulesForUserOnDay
@@ -150,7 +151,11 @@ export function WeekBoard({
               const daySchedules = schedules
                 .filter((schedule) => schedule.facilityIds?.includes(facility.id) && scheduleIntersectsDay(schedule, day.key))
                 .filter((schedule) => presentSchedule(schedule, currentUserId))
-                .sort((left, right) => left.startAt.localeCompare(right.startAt));
+                .sort((left, right) => {
+                  const leftKey = `${localDateKeyFromIso(left.startAt)}-${left.startAt}`;
+                  const rightKey = `${localDateKeyFromIso(right.startAt)}-${right.startAt}`;
+                  return leftKey.localeCompare(rightKey);
+                });
 
               return (
                 <div

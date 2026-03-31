@@ -6,7 +6,7 @@ import { ScheduleDialog } from "@/components/schedule-dialog";
 import { WeekBoard } from "@/components/week-board";
 import { deleteSchedule, listFacilities, listSchedules, listUsers, saveSchedule } from "@/lib/data-service";
 import { AppUser, Facility, ScheduleDraft, ScheduleItem } from "@/lib/types";
-import { addDays, buildWeekDays, expandRecurringSchedules, formatDateKey, sortUsersForDisplay } from "@/lib/utils";
+import { addDays, buildWeekDays, expandRecurringSchedules, formatDateKey, localDateKeyFromIso, sortUsersForDisplay } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -59,7 +59,7 @@ export default function DashboardPage() {
   function openExistingSchedule(schedule: ScheduleItem) {
     setSelectedSchedule(schedule);
     setDraftUserId(schedule.ownerUserId);
-    setDraftDate(schedule.startAt.slice(0, 10));
+    setDraftDate(localDateKeyFromIso(schedule.startAt));
     setDraftFacilityIds(schedule.facilityIds ?? []);
     setDialogOpen(true);
   }

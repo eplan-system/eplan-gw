@@ -17,6 +17,10 @@ export function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+export function localDateKeyFromIso(value: string) {
+  return formatDateKey(new Date(value));
+}
+
 export function formatScheduleTimeLabel(schedule: ScheduleItem) {
   if (schedule.allDay) {
     return "終日";
@@ -87,20 +91,22 @@ export function buildMonthDays(base = new Date()) {
   });
 }
 
-function startOfDay(dayKey: string) {
-  return new Date(`${dayKey}T00:00:00`);
-}
-
-function endOfDay(dayKey: string) {
-  return new Date(`${dayKey}T23:59:59.999`);
-}
-
 export function scheduleIntersectsDay(schedule: ScheduleItem, dayKey: string) {
-  const dayStart = startOfDay(dayKey);
-  const dayEnd = endOfDay(dayKey);
-  const scheduleStart = new Date(schedule.startAt);
-  const scheduleEnd = new Date(schedule.endAt);
-  return scheduleStart <= dayEnd && scheduleEnd >= dayStart;
+  const startKey = localDateKeyFromIso(schedule.startAt);
+  const endDate = new Date(schedule.endAt);
+
+  if (
+    !schedule.allDay &&
+    endDate.getHours() === 0 &&
+    endDate.getMinutes() === 0 &&
+    endDate.getSeconds() === 0 &&
+    endDate.getMilliseconds() === 0
+  ) {
+    endDate.setDate(endDate.getDate() - 1);
+  }
+
+  const endKey = formatDateKey(endDate);
+  return startKey <= dayKey && endKey >= dayKey;
 }
 
 function nthMonday(year: number, month: number, nth: number) {

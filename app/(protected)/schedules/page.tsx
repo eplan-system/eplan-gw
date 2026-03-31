@@ -20,6 +20,7 @@ import {
   isSaturdayKey,
   isSundayKey,
   isTodayKey,
+  localDateKeyFromIso,
   presentSchedule,
   scheduleIntersectsDay,
   schedulesForUserInMonth,
@@ -118,7 +119,7 @@ export default function SchedulesPage() {
   function openExistingSchedule(schedule: ScheduleItem) {
     setSelectedSchedule(schedule);
     setDraftUserId(schedule.ownerUserId);
-    setDraftDate(schedule.startAt.slice(0, 10));
+    setDraftDate(localDateKeyFromIso(schedule.startAt));
     setDraftFacilityIds(schedule.facilityIds ?? []);
     setDialogOpen(true);
   }
