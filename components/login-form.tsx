@@ -29,9 +29,9 @@ export function LoginForm() {
   return (
     <form className="login-card" onSubmit={handleSubmit}>
       <div>
-        <p className="eyebrow">smart-first groupware</p>
-        <h1>社内グループウェア</h1>
-        <p className="muted">スマホでも見やすい予定確認を最優先にした運用向けの画面です。</p>
+        <p className="eyebrow">e-plan internal</p>
+        <h1>Eプラン社内グループウェア</h1>
+        <p className="muted">社内の予定共有と確認に利用するログイン画面です。</p>
       </div>
 
       <label className="field">
@@ -51,8 +51,8 @@ export function LoginForm() {
       </button>
 
       <div className="hint-box">
-        <strong>デモモード</strong>
-        <p>`.env.local` 未設定時はローカルデータで動作し、再訪問時もログイン状態を保持します。</p>
+        <strong>ご利用案内</strong>
+        <p>発行済みのメールアドレスとパスワードでログインしてください。</p>
       </div>
 
       <button
@@ -66,7 +66,7 @@ export function LoginForm() {
             await bootstrapFirstAdmin(email, password);
             await signIn(email, password);
           } catch {
-            setError("初回管理者の作成に失敗しました。入力内容と Firebase 設定を確認してください。");
+            setError("初回管理者の作成に失敗しました。入力値と Firebase 設定を確認してください。");
           } finally {
             setCreating(false);
           }
