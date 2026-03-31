@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { WEEKDAY_LABELS } from "@/lib/constants";
 import {
   AppUser,
@@ -85,9 +85,14 @@ export function ScheduleDialog({
   onSave,
   onDelete
 }: Props) {
-  const defaults = defaultRange(initialDate);
-  const defaultOwnerUserId = currentUserId || initialUserId || users[0]?.id || "";
-  const defaultParticipantUserIds = initialUserId ? [initialUserId] : defaultOwnerUserId ? [defaultOwnerUserId] : [];
+  const defaults = useMemo(() => defaultRange(initialDate), [initialDate]);
+  const defaultOwnerUserId = useMemo(() => currentUserId || initialUserId || users[0]?.id || "", [currentUserId, initialUserId, users]);
+  const defaultParticipantUserIds = useMemo(
+    () => (initialUserId ? [initialUserId] : defaultOwnerUserId ? [defaultOwnerUserId] : []),
+    [defaultOwnerUserId, initialUserId]
+  );
+  const initialFacilityKey = initialFacilityIds.join("|");
+  const normalizedInitialFacilityIds = useMemo(() => [...initialFacilityIds], [initialFacilityKey]);
 
   const [form, setForm] = useState<ScheduleDraft>({
     title: "",
@@ -151,16 +156,16 @@ export function ScheduleDialog({
 
     const nextStart = splitLocalDateTime(defaults.startAt);
     const nextEnd = splitLocalDateTime(defaults.endAt);
-    setForm({
-      title: "",
-      startAt: `${nextStart.datePart}T${nextStart.timePart}`,
-      endAt: `${nextEnd.datePart}T${nextEnd.timePart}`,
-      ownerUserId: defaultOwnerUserId,
-      participantUserIds: defaultParticipantUserIds,
-      facilityIds: initialFacilityIds,
-      memo: "",
-      visibility: "public"
-    });
+      setForm({
+        title: "",
+        startAt: `${nextStart.datePart}T${nextStart.timePart}`,
+        endAt: `${nextEnd.datePart}T${nextEnd.timePart}`,
+        ownerUserId: defaultOwnerUserId,
+        participantUserIds: defaultParticipantUserIds,
+        facilityIds: normalizedInitialFacilityIds,
+        memo: "",
+        visibility: "public"
+      });
     setRecurrenceFrequency("none");
     setRecurrenceInterval(1);
     setRecurrenceUntil(defaultUntil(initialDate));
@@ -180,7 +185,7 @@ export function ScheduleDialog({
     defaults.endAt,
     defaults.startAt,
     initialDate,
-    initialFacilityIds,
+    normalizedInitialFacilityIds,
     open,
     schedule
   ]);
