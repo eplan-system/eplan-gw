@@ -213,12 +213,12 @@ export function ScheduleDialog({
 
           <label className="field">
             <span>開始日時</span>
-            <input type="datetime-local" value={form.startAt} onChange={(event) => setForm({ ...form, startAt: event.target.value })} required />
+            <input type="datetime-local" step={300} value={form.startAt} onChange={(event) => setForm({ ...form, startAt: event.target.value })} required />
           </label>
 
           <label className="field">
             <span>終了日時</span>
-            <input type="datetime-local" value={form.endAt} onChange={(event) => setForm({ ...form, endAt: event.target.value })} required />
+            <input type="datetime-local" step={300} value={form.endAt} onChange={(event) => setForm({ ...form, endAt: event.target.value })} required />
           </label>
 
           <label className="field">
