@@ -11,13 +11,26 @@ const TOKYO_DATE_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
 const TOKYO_TIME_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
   hour: "2-digit",
-  minute: "2-digit"
+  minute: "2-digit",
+  hour12: false
+});
+
+const TOKYO_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false
 });
 
 export function formatDateKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
+  const parts = TOKYO_DATE_FORMATTER.formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value ?? "";
+  const month = parts.find((part) => part.type === "month")?.value ?? "";
+  const day = parts.find((part) => part.type === "day")?.value ?? "";
   return `${year}-${month}-${day}`;
 }
 
@@ -31,16 +44,20 @@ export function formatDateTime(value: string) {
 }
 
 export function localDateKeyFromIso(value: string) {
-  const parts = TOKYO_DATE_FORMATTER.formatToParts(new Date(value));
-  const year = parts.find((part) => part.type === "year")?.value ?? "";
-  const month = parts.find((part) => part.type === "month")?.value ?? "";
-  const day = parts.find((part) => part.type === "day")?.value ?? "";
-  return `${year}-${month}-${day}`;
+  return formatDateKey(new Date(value));
+}
+
+function tokyoDateTimeParts(date: Date) {
+  return TOKYO_DATE_TIME_FORMATTER.formatToParts(date);
+}
+
+function tokyoTimeValue(date: Date, type: "hour" | "minute" | "second") {
+  return tokyoDateTimeParts(date).find((part) => part.type === type)?.value ?? "00";
 }
 
 export function formatTokyoIso(date: Date) {
   const dateParts = TOKYO_DATE_FORMATTER.formatToParts(date);
-  const timeParts = TOKYO_TIME_FORMATTER.formatToParts(date);
+  const timeParts = tokyoDateTimeParts(date);
   const year = dateParts.find((part) => part.type === "year")?.value ?? "1970";
   const month = dateParts.find((part) => part.type === "month")?.value ?? "01";
   const day = dateParts.find((part) => part.type === "day")?.value ?? "01";
@@ -119,12 +136,12 @@ export function scheduleIntersectsDay(schedule: ScheduleItem, dayKey: string) {
 
   if (
     !schedule.allDay &&
-    endDate.getHours() === 0 &&
-    endDate.getMinutes() === 0 &&
-    endDate.getSeconds() === 0 &&
+    tokyoTimeValue(endDate, "hour") === "00" &&
+    tokyoTimeValue(endDate, "minute") === "00" &&
+    tokyoTimeValue(endDate, "second") === "00" &&
     endDate.getMilliseconds() === 0
   ) {
-    endDate.setDate(endDate.getDate() - 1);
+    endDate.setTime(endDate.getTime() - 1);
   }
 
   const endKey = formatDateKey(endDate);

@@ -29,6 +29,7 @@ export interface ScheduleItem {
   title: string;
   startAt: string;
   endAt: string;
+  allDay?: boolean;
   ownerUserId: string;
   participantUserIds: string[];
   facilityIds: string[];
@@ -45,6 +46,7 @@ export interface ScheduleDraft {
   title: string;
   startAt: string;
   endAt: string;
+  allDay?: boolean;
   ownerUserId: string;
   participantUserIds: string[];
   facilityIds: string[];
