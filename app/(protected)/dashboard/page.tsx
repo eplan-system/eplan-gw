@@ -75,14 +75,14 @@ export default function DashboardPage() {
           </div>
           <div className="toolbar-group">
             <label className="compact-filter">
-              <select aria-label="フィルター" value={department} onChange={(event) => setDepartment(event.target.value)}>
-                <option value="all">全部</option>
-                <option value="facilities">設備</option>
+              <select aria-label="表示対象" value={department} onChange={(event) => setDepartment(event.target.value)}>
+                <option value="all">全社</option>
                 {departments.map((item) => (
                   <option key={item} value={item}>
                     {item}
                   </option>
                 ))}
+                <option value="facilities">設備</option>
               </select>
             </label>
             <div className="week-switcher">
@@ -121,23 +121,21 @@ export default function DashboardPage() {
       {pendingUsers.length > 0 ? (
         <section className="surface-card onboarding-panel">
           <strong>初期設定待ちのメンバーがあります</strong>
-          <p>
-            {pendingUsers.length}名が「部署未設定」または「携帯番号未設定」です。管理画面から表示名・部署・表示順を揃えると、週間表がさらに見やすくなります。
-          </p>
+          <p>{pendingUsers.length}名が部署または携帯番号未設定です。表示設定から整えると、週表示がさらに見やすくなります。</p>
         </section>
       ) : null}
 
       {users.length === 0 ? (
         <section className="surface-card onboarding-panel">
-          <strong>最初のメンバー準備</strong>
-          <p>Firebase Authentication でユーザーを作成して一度ログインすると、ここにメンバーとして表示されます。</p>
+          <strong>最初のメンバー登録</strong>
+          <p>Firebase Authentication でユーザーを追加して一度ログインすると、ここにメンバーとして表示されます。</p>
         </section>
       ) : null}
 
       {facilities.length === 0 ? (
         <section className="surface-card onboarding-panel">
-          <strong>設備マスターが未投入です</strong>
-          <p>管理画面の「初期設備を投入」を押すと、会議室と車両の候補がまとめて入ります。</p>
+          <strong>設備が未設定です</strong>
+          <p>表示設定の「初期設備を反映」を押すと、会議室や社用車を一覧へ追加できます。</p>
         </section>
       ) : null}
 

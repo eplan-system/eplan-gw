@@ -50,6 +50,20 @@ function defaultUntil(dateKey: string) {
   return formatDateKey(date);
 }
 
+function splitLocalDateTime(value: string) {
+  const [datePart, timePart = "09:00"] = value.split("T");
+  return {
+    datePart,
+    timePart: timePart.slice(0, 5)
+  };
+}
+
+const TIME_OPTIONS = Array.from({ length: 24 * 12 }, (_, index) => {
+  const hour = String(Math.floor(index / 12)).padStart(2, "0");
+  const minute = String((index % 12) * 5).padStart(2, "0");
+  return `${hour}:${minute}`;
+});
+
 export function ScheduleDialog({
   open,
   users,
@@ -85,17 +99,23 @@ export function ScheduleDialog({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [startDate, setStartDate] = useState(defaults.startAt.slice(0, 10));
+  const [startTime, setStartTime] = useState("09:00");
+  const [endDate, setEndDate] = useState(defaults.endAt.slice(0, 10));
+  const [endTime, setEndTime] = useState("10:00");
 
   useEffect(() => {
     if (!open) return;
 
     if (schedule) {
+      const startParts = splitLocalDateTime(toLocalDateTime(schedule.startAt));
+      const endParts = splitLocalDateTime(toLocalDateTime(schedule.endAt));
       setErrorMessage("");
       setForm({
         id: schedule.id,
         title: schedule.title,
-        startAt: toLocalDateTime(schedule.startAt),
-        endAt: toLocalDateTime(schedule.endAt),
+        startAt: `${startParts.datePart}T${startParts.timePart}`,
+        endAt: `${endParts.datePart}T${endParts.timePart}`,
         ownerUserId: schedule.ownerUserId,
         participantUserIds: schedule.participantUserIds,
         facilityIds: schedule.facilityIds ?? [],
@@ -111,13 +131,19 @@ export function ScheduleDialog({
       setRecurrenceCount(schedule.recurrenceRule?.count ?? 10);
       setWeeklyDays(schedule.recurrenceRule?.weeklyDays ?? [new Date(schedule.startAt).getDay()]);
       setShowAdvanced(Boolean(schedule.recurrenceRule || schedule.visibility !== "public"));
+      setStartDate(startParts.datePart);
+      setStartTime(startParts.timePart);
+      setEndDate(endParts.datePart);
+      setEndTime(endParts.timePart);
       return;
     }
 
+    const nextStart = splitLocalDateTime(defaults.startAt);
+    const nextEnd = splitLocalDateTime(defaults.endAt);
     setForm({
       title: "",
-      startAt: defaults.startAt,
-      endAt: defaults.endAt,
+      startAt: `${nextStart.datePart}T${nextStart.timePart}`,
+      endAt: `${nextEnd.datePart}T${nextEnd.timePart}`,
       ownerUserId: defaultOwnerUserId,
       participantUserIds: defaultParticipantUserIds,
       facilityIds: initialFacilityIds,
@@ -132,6 +158,10 @@ export function ScheduleDialog({
     setWeeklyDays([new Date(`${initialDate}T09:00:00`).getDay()]);
     setShowAdvanced(false);
     setErrorMessage("");
+    setStartDate(nextStart.datePart);
+    setStartTime(nextStart.timePart);
+    setEndDate(nextEnd.datePart);
+    setEndTime(nextEnd.timePart);
   }, [defaultOwnerUserId, defaultParticipantUserIds, defaults.endAt, defaults.startAt, initialDate, initialFacilityIds, open, schedule]);
 
   if (!open) return null;
@@ -145,8 +175,10 @@ export function ScheduleDialog({
       const nextOwnerId = currentUserId || form.ownerUserId || initialUserId || users[0]?.id || "";
       const fallbackParticipantId = initialUserId || nextOwnerId;
       const participantIds = form.participantUserIds.length ? form.participantUserIds : fallbackParticipantId ? [fallbackParticipantId] : [];
-      const startIso = toIsoFromLocalDateTime(form.startAt);
-      const endIso = toIsoFromLocalDateTime(form.endAt);
+      const startLocal = `${startDate}T${startTime}`;
+      const endLocal = `${endDate}T${endTime}`;
+      const startIso = toIsoFromLocalDateTime(startLocal);
+      const endIso = toIsoFromLocalDateTime(endLocal);
 
       if (new Date(startIso) >= new Date(endIso)) {
         setErrorMessage("終了日時は開始日時より後にしてください。");
@@ -212,13 +244,63 @@ export function ScheduleDialog({
           </label>
 
           <label className="field">
-            <span>開始日時</span>
-            <input type="datetime-local" step={300} value={form.startAt} onChange={(event) => setForm({ ...form, startAt: event.target.value })} required />
+            <span>開始日</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(event) => {
+                setStartDate(event.target.value);
+                setForm({ ...form, startAt: `${event.target.value}T${startTime}` });
+              }}
+              required
+            />
           </label>
 
           <label className="field">
-            <span>終了日時</span>
-            <input type="datetime-local" step={300} value={form.endAt} onChange={(event) => setForm({ ...form, endAt: event.target.value })} required />
+            <span>開始時刻</span>
+            <select
+              value={startTime}
+              onChange={(event) => {
+                setStartTime(event.target.value);
+                setForm({ ...form, startAt: `${startDate}T${event.target.value}` });
+              }}
+            >
+              {TIME_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>終了日</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(event) => {
+                setEndDate(event.target.value);
+                setForm({ ...form, endAt: `${event.target.value}T${endTime}` });
+              }}
+              required
+            />
+          </label>
+
+          <label className="field">
+            <span>終了時刻</span>
+            <select
+              value={endTime}
+              onChange={(event) => {
+                setEndTime(event.target.value);
+                setForm({ ...form, endAt: `${endDate}T${event.target.value}` });
+              }}
+            >
+              {TIME_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="field">

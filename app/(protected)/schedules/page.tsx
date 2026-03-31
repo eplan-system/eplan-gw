@@ -77,10 +77,6 @@ export default function SchedulesPage() {
     .filter((item) => canViewSchedule(item, user?.id))
     .sort((left, right) => left.startAt.localeCompare(right.startAt));
 
-  const ownSchedules = items
-    .filter((item) => item.ownerUserId === user?.id || item.participantUserIds.includes(user?.id ?? ""))
-    .sort((left, right) => left.startAt.localeCompare(right.startAt));
-
   const filteredSchedules = useMemo(() => {
     if (mode === "personal-day") {
       const dayKey = formatDateKey(calendarBase);
@@ -94,6 +90,7 @@ export default function SchedulesPage() {
 
     return personalSchedules;
   }, [calendarBase, mode, personalSchedules, weekDays]);
+
   const dayToneClass = (dayKey: string) => {
     if (isHolidayKey(dayKey) || isSundayKey(dayKey)) return "holiday-cell";
     if (isSaturdayKey(dayKey)) return "saturday-cell";
@@ -124,28 +121,6 @@ export default function SchedulesPage() {
     setDialogOpen(true);
   }
 
-  function addToGoogleCalendar() {
-    const target = ownSchedules[0];
-    if (!target) return;
-
-    const formatGoogleDate = (value: string) =>
-      new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-
-    const location = target.facilityIds?.length
-      ? facilities.filter((item) => target.facilityIds.includes(item.id)).map((item) => item.name).join(" / ")
-      : "";
-
-    const params = new URLSearchParams({
-      action: "TEMPLATE",
-      text: target.title,
-      dates: `${formatGoogleDate(target.startAt)}/${formatGoogleDate(target.endAt)}`,
-      details: target.memo || "",
-      location
-    });
-
-    window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener,noreferrer");
-  }
-
   return (
     <div className="page-stack">
       <section className="surface-card">
@@ -162,24 +137,21 @@ export default function SchedulesPage() {
                 </button>
               ))}
             </div>
-            <button className="small-button" type="button" onClick={addToGoogleCalendar} disabled={!ownSchedules.length}>
-              Google カレンダーへ追加
-            </button>
             {mode === "team-week" ? (
               <label className="compact-filter">
-                <select aria-label="フィルター" value={department} onChange={(event) => setDepartment(event.target.value)}>
-                  <option value="all">全部</option>
-                  <option value="facilities">設備</option>
+                <select aria-label="表示対象" value={department} onChange={(event) => setDepartment(event.target.value)}>
+                  <option value="all">全社</option>
                   {departments.map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>
                   ))}
+                  <option value="facilities">設備</option>
                 </select>
               </label>
             ) : (
               <label className="compact-filter">
-                <select aria-label="対象" value={targetUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+                <select aria-label="対象者" value={targetUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
                   {users.map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.id === user?.id ? `${member.name}（自分）` : member.name}
@@ -310,7 +282,7 @@ export default function SchedulesPage() {
                           );
                         })
                       ) : (
-                        <div className="cell-placeholder">＋</div>
+                        <div className="cell-placeholder">+</div>
                       )}
                     </div>
                   </div>
@@ -332,7 +304,7 @@ export default function SchedulesPage() {
                   <strong>{visible.title}</strong>
                   <div className="list-meta">
                     <span>{formatDateTime(item.startAt)}</span>
-                    <span>登録者: {userNameById(users, item.ownerUserId)}</span>
+                    <span>登録者 {userNameById(users, item.ownerUserId)}</span>
                   </div>
                   {visible.memo ? <p className="muted">{visible.memo}</p> : null}
                 </article>
@@ -340,14 +312,6 @@ export default function SchedulesPage() {
             })}
           </div>
         ) : null}
-      </section>
-
-      <section className="surface-card">
-        <p className="eyebrow">schedule tips</p>
-        <h3>Google カレンダー連携について</h3>
-        <p className="muted">
-          このボタンは、ログイン中の自分に関係する先頭の予定を Google カレンダーの登録画面へ渡します。完全な双方向同期ではありませんが、よく使う「Google カレンダーへ追加」の導線として使えます。
-        </p>
       </section>
 
       <ScheduleDialog
