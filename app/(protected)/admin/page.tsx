@@ -175,7 +175,7 @@ export default function AdminPage() {
         <h3>{isAdmin ? "表示設定" : "個人設定"}</h3>
         <p className="muted">
           {isAdmin
-            ? "表示名・部署・並び順など、画面上の見え方をここで整えられます。ログイン用のメールアドレスとパスワード本体は Firebase Authentication で管理されます。"
+            ? "表示名、部署、並び順など、画面上の見え方をここで整えられます。ログイン用メールアドレスとパスワード本体は Firebase Authentication で管理されます。"
             : "この画面では自分の表示名、部署、携帯番号、色、パスワードを変更できます。"}
         </p>
         {statusMessage ? <p className="success-text">{statusMessage}</p> : null}
@@ -256,15 +256,27 @@ export default function AdminPage() {
         </form>
       </section>
 
+      <section className="surface-card">
+        <p className="eyebrow">external calendar</p>
+        <h3>外部カレンダー連携</h3>
+        <p className="muted">
+          Google カレンダーなどへの一方向同期は、この設定画面で管理する想定です。現在は準備中で、向こう3か月分などの予定を外部カレンダーへ同期する機能をここに追加していきます。
+        </p>
+        <div className="info-strip" style={{ marginTop: 12 }}>
+          <strong>現在の状態</strong>
+          <p>予定画面にあった一時的な追加ボタンは廃止しました。今後の同期設定はこの画面にまとめていきます。</p>
+        </div>
+      </section>
+
       {isAdmin ? (
         <>
           <section className="surface-card">
             <p className="eyebrow">admin tools</p>
             <h3>管理者向け設定</h3>
-            <p className="muted">初期設備の投入やメンバーの表示調整は、管理者だけが利用できます。</p>
+            <p className="muted">初期設備の反映やメンバーの表示調整は、管理者だけが利用できます。</p>
             <div className="info-strip" style={{ marginTop: 12 }}>
               <strong>初回ログインの流れ</strong>
-              <p>Authentication に追加しただけでは一覧に出ません。一度ログインすると Users にプロフィールが作られ、その後ここで表示名や部署を揃えられます。</p>
+              <p>Authentication に追加しただけでは一覧に出ません。一度ログインすると Users にプロフィールが作られ、その後ここで表示名や部署を整えられます。</p>
             </div>
             {pendingUsers.length > 0 ? (
               <div className="onboarding-panel">
