@@ -74,9 +74,8 @@ export default function DashboardPage() {
             <h3>全体週間表示</h3>
           </div>
           <div className="toolbar-group">
-            <label className="filter-field">
-              <span className="filter-label">フィルター</span>
-              <select value={department} onChange={(event) => setDepartment(event.target.value)}>
+            <label className="compact-filter">
+              <select aria-label="フィルター" value={department} onChange={(event) => setDepartment(event.target.value)}>
                 <option value="all">全部</option>
                 <option value="facilities">設備</option>
                 {departments.map((item) => (
@@ -103,9 +102,6 @@ export default function DashboardPage() {
             <button className="small-button" type="button" onClick={() => openNewSchedule(draftUserId || user?.id || users[0]?.id || "", draftDate)}>
               ＋予定追加
             </button>
-            <span className="status-badge">
-              {users.length}名 / {schedules.length}件
-            </span>
           </div>
         </div>
 
