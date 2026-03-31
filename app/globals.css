@@ -592,9 +592,10 @@ button, input, select, textarea { font: inherit; }
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
+  max-height: min(68vh, 900px);
 }
 .week-grid { display: grid; grid-template-columns: 180px repeat(7, minmax(116px, 1fr)); }
 .week-grid.header {
@@ -1065,11 +1066,13 @@ button, input, select, textarea { font: inherit; }
 @media (max-width: 780px) {
   .app-shell { padding: 8px 6px 18px; }
   .week-board-desktop {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-padding-left: 110px;
-  }
+      display: block;
+      overflow-x: auto;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-padding-left: 110px;
+      max-height: 58vh;
+    }
   .week-board-mobile { display: none; }
   .form-grid { grid-template-columns: 1fr; }
   .compact-form-grid { grid-template-columns: 1fr; }
