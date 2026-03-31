@@ -260,8 +260,7 @@ export default function SchedulesPage() {
                     }}
                   >
                     <div className="month-cell-top">
-                      <strong>{day.day}</strong>
-                      <span>{day.label}</span>
+                      <strong className="month-day-number">{day.day}</strong>
                     </div>
                     <div className="month-schedule-list">
                       {daySchedules.length ? (
