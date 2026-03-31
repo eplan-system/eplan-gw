@@ -14,12 +14,14 @@ import {
   expandRecurringSchedules,
   formatDateKey,
   formatDateTime,
+  formatScheduleTimeLabel,
   getJapaneseHolidayName,
   isHolidayKey,
   isSaturdayKey,
   isSundayKey,
   isTodayKey,
   presentSchedule,
+  scheduleIntersectsDay,
   schedulesForUserInMonth,
   sortUsersForDisplay,
   userNameById
@@ -80,12 +82,12 @@ export default function SchedulesPage() {
   const filteredSchedules = useMemo(() => {
     if (mode === "personal-day") {
       const dayKey = formatDateKey(calendarBase);
-      return personalSchedules.filter((item) => item.startAt.slice(0, 10) === dayKey);
+      return personalSchedules.filter((item) => scheduleIntersectsDay(item, dayKey));
     }
 
     if (mode === "personal-week") {
       const weekKeys = new Set(weekDays.map((day) => day.key));
-      return personalSchedules.filter((item) => weekKeys.has(item.startAt.slice(0, 10)));
+      return personalSchedules.filter((item) => weekDays.some((day) => weekKeys.has(day.key) && scheduleIntersectsDay(item, day.key)));
     }
 
     return personalSchedules;
@@ -229,7 +231,7 @@ export default function SchedulesPage() {
             <div className="month-grid">
               {monthDays.map((day) => {
                 const daySchedules = monthSchedules
-                  .filter((item) => item.startAt.slice(0, 10) === day.key)
+                  .filter((item) => scheduleIntersectsDay(item, day.key))
                   .filter((item) => canViewSchedule(item, user?.id))
                   .slice(0, 3);
 
@@ -277,7 +279,7 @@ export default function SchedulesPage() {
                               }}
                             >
                               <strong>{visible.title}</strong>
-                              <span>{new Date(item.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}</span>
+                              <span>{formatScheduleTimeLabel(item)}</span>
                             </button>
                           );
                         })

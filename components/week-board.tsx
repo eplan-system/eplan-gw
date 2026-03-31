@@ -1,7 +1,17 @@
 "use client";
 
 import { AppUser, Facility, ScheduleItem } from "@/lib/types";
-import { buildWeekDays, isHolidayKey, isSaturdayKey, isSundayKey, isTodayKey, presentSchedule, schedulesForUserOnDay } from "@/lib/utils";
+import {
+  buildWeekDays,
+  formatScheduleTimeLabel,
+  isHolidayKey,
+  isSaturdayKey,
+  isSundayKey,
+  isTodayKey,
+  presentSchedule,
+  scheduleIntersectsDay,
+  schedulesForUserOnDay
+} from "@/lib/utils";
 
 type Props = {
   users: AppUser[];
@@ -98,11 +108,7 @@ export function WeekBoard({
                             }}
                           >
                             <strong>{visible.title}</strong>
-                            <span>
-                              {new Date(schedule.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                              {" - "}
-                              {new Date(schedule.endAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
+                            <span>{formatScheduleTimeLabel(schedule)}</span>
                             {schedule.facilityIds?.length ? <small>設備 {schedule.facilityIds.length}件</small> : null}
                           </button>
                         );
@@ -142,7 +148,7 @@ export function WeekBoard({
             </div>
             {weekDays.map((day) => {
               const daySchedules = schedules
-                .filter((schedule) => schedule.facilityIds?.includes(facility.id) && schedule.startAt.slice(0, 10) === day.key)
+                .filter((schedule) => schedule.facilityIds?.includes(facility.id) && scheduleIntersectsDay(schedule, day.key))
                 .filter((schedule) => presentSchedule(schedule, currentUserId))
                 .sort((left, right) => left.startAt.localeCompare(right.startAt));
 
@@ -177,11 +183,7 @@ export function WeekBoard({
                             }}
                           >
                             <strong>{visible.title}</strong>
-                            <span>
-                              {new Date(schedule.startAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                              {" - "}
-                              {new Date(schedule.endAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
+                            <span>{formatScheduleTimeLabel(schedule)}</span>
                           </button>
                         );
                       })}

@@ -17,6 +17,20 @@ export function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+export function formatScheduleTimeLabel(schedule: ScheduleItem) {
+  if (schedule.allDay) {
+    return "終日";
+  }
+
+  return `${new Date(schedule.startAt).toLocaleTimeString("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit"
+  })} - ${new Date(schedule.endAt).toLocaleTimeString("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit"
+  })}`;
+}
+
 export function startOfWeek(base = new Date()) {
   const date = new Date(base);
   const day = date.getDay();
@@ -71,6 +85,22 @@ export function buildMonthDays(base = new Date()) {
       dayOfWeek: date.getDay()
     };
   });
+}
+
+function startOfDay(dayKey: string) {
+  return new Date(`${dayKey}T00:00:00`);
+}
+
+function endOfDay(dayKey: string) {
+  return new Date(`${dayKey}T23:59:59.999`);
+}
+
+export function scheduleIntersectsDay(schedule: ScheduleItem, dayKey: string) {
+  const dayStart = startOfDay(dayKey);
+  const dayEnd = endOfDay(dayKey);
+  const scheduleStart = new Date(schedule.startAt);
+  const scheduleEnd = new Date(schedule.endAt);
+  return scheduleStart <= dayEnd && scheduleEnd >= dayStart;
 }
 
 function nthMonday(year: number, month: number, nth: number) {
@@ -176,8 +206,8 @@ export function isSundayKey(dayKey: string) {
 
 export function schedulesForUserOnDay(schedules: ScheduleItem[], userId: string, isoDay: string) {
   return schedules.filter((schedule) => {
-    const day = schedule.startAt.slice(0, 10);
-    return day === isoDay && (schedule.ownerUserId === userId || schedule.participantUserIds.includes(userId));
+    const involved = schedule.ownerUserId === userId || schedule.participantUserIds.includes(userId);
+    return involved && scheduleIntersectsDay(schedule, isoDay);
   });
 }
 
@@ -185,11 +215,13 @@ export function schedulesForUserInMonth(schedules: ScheduleItem[], userId: strin
   const monthStart = startOfMonth(base);
   const targetYear = monthStart.getFullYear();
   const targetMonth = monthStart.getMonth();
+  const monthEnd = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59, 999);
 
   return schedules.filter((schedule) => {
-    const date = new Date(schedule.startAt);
     const involved = schedule.ownerUserId === userId || schedule.participantUserIds.includes(userId);
-    return involved && date.getFullYear() === targetYear && date.getMonth() === targetMonth;
+    const scheduleStart = new Date(schedule.startAt);
+    const scheduleEnd = new Date(schedule.endAt);
+    return involved && scheduleStart <= monthEnd && scheduleEnd >= monthStart;
   });
 }
 
@@ -285,6 +317,10 @@ function formatIcsDate(value: string) {
   return new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 }
 
+function formatIcsAllDayDate(value: string) {
+  return new Date(value).toISOString().slice(0, 10).replace(/-/g, "");
+}
+
 export function buildIcsFile(schedules: ScheduleItem[], calendarName: string) {
   const lines = [
     "BEGIN:VCALENDAR",
@@ -301,8 +337,13 @@ export function buildIcsFile(schedules: ScheduleItem[], calendarName: string) {
       lines.push("BEGIN:VEVENT");
       lines.push(`UID:${schedule.id}@office-hub.local`);
       lines.push(`DTSTAMP:${formatIcsDate(schedule.updatedAt || schedule.createdAt)}`);
-      lines.push(`DTSTART:${formatIcsDate(schedule.startAt)}`);
-      lines.push(`DTEND:${formatIcsDate(schedule.endAt)}`);
+      if (schedule.allDay) {
+        lines.push(`DTSTART;VALUE=DATE:${formatIcsAllDayDate(schedule.startAt)}`);
+        lines.push(`DTEND;VALUE=DATE:${formatIcsAllDayDate(schedule.endAt)}`);
+      } else {
+        lines.push(`DTSTART:${formatIcsDate(schedule.startAt)}`);
+        lines.push(`DTEND:${formatIcsDate(schedule.endAt)}`);
+      }
       lines.push(`SUMMARY:${escapeIcsText(schedule.title)}`);
       if (schedule.memo) {
         lines.push(`DESCRIPTION:${escapeIcsText(schedule.memo)}`);
