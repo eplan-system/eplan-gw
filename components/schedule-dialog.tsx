@@ -2,7 +2,15 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { WEEKDAY_LABELS } from "@/lib/constants";
-import { AppUser, Facility, RecurrenceFrequency, RecurrenceRule, ScheduleDraft, ScheduleItem, ScheduleVisibility } from "@/lib/types";
+import {
+  AppUser,
+  Facility,
+  RecurrenceFrequency,
+  RecurrenceRule,
+  ScheduleDraft,
+  ScheduleItem,
+  ScheduleVisibility
+} from "@/lib/types";
 import { formatDateKey, recurrenceSummary } from "@/lib/utils";
 
 type Props = {
@@ -58,6 +66,10 @@ function splitLocalDateTime(value: string) {
   };
 }
 
+function toggleId(current: string[], id: string) {
+  return current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+}
+
 const TIME_OPTIONS = Array.from({ length: 24 * 12 }, (_, index) => {
   const hour = String(Math.floor(index / 12)).padStart(2, "0");
   const minute = String((index % 12) * 5).padStart(2, "0");
@@ -80,6 +92,7 @@ export function ScheduleDialog({
   const defaults = defaultRange(initialDate);
   const defaultOwnerUserId = currentUserId || initialUserId || users[0]?.id || "";
   const defaultParticipantUserIds = initialUserId ? [initialUserId] : defaultOwnerUserId ? [defaultOwnerUserId] : [];
+
   const [form, setForm] = useState<ScheduleDraft>({
     title: "",
     startAt: defaults.startAt,
@@ -116,7 +129,7 @@ export function ScheduleDialog({
         title: schedule.title,
         startAt: `${startParts.datePart}T${startParts.timePart}`,
         endAt: `${endParts.datePart}T${endParts.timePart}`,
-        ownerUserId: schedule.ownerUserId,
+        ownerUserId: currentUserId || schedule.ownerUserId,
         participantUserIds: schedule.participantUserIds,
         facilityIds: schedule.facilityIds ?? [],
         memo: schedule.memo,
@@ -127,7 +140,9 @@ export function ScheduleDialog({
       setRecurrenceFrequency(schedule.recurrenceRule?.frequency ?? "none");
       setRecurrenceInterval(schedule.recurrenceRule?.interval ?? 1);
       setRecurrenceUntil(schedule.recurrenceRule?.until ?? schedule.startAt.slice(0, 10));
-      setRecurrenceEndMode(schedule.recurrenceRule?.endMode ?? (schedule.recurrenceRule?.count ? "count" : schedule.recurrenceRule?.until ? "until" : "never"));
+      setRecurrenceEndMode(
+        schedule.recurrenceRule?.endMode ?? (schedule.recurrenceRule?.count ? "count" : schedule.recurrenceRule?.until ? "until" : "never")
+      );
       setRecurrenceCount(schedule.recurrenceRule?.count ?? 10);
       setWeeklyDays(schedule.recurrenceRule?.weeklyDays ?? [new Date(schedule.startAt).getDay()]);
       setShowAdvanced(Boolean(schedule.recurrenceRule || schedule.visibility !== "public"));
@@ -162,9 +177,25 @@ export function ScheduleDialog({
     setStartTime(nextStart.timePart);
     setEndDate(nextEnd.datePart);
     setEndTime(nextEnd.timePart);
-  }, [defaultOwnerUserId, defaultParticipantUserIds, defaults.endAt, defaults.startAt, initialDate, initialFacilityIds, open, schedule]);
+  }, [
+    currentUserId,
+    defaultOwnerUserId,
+    defaultParticipantUserIds,
+    defaults.endAt,
+    defaults.startAt,
+    initialDate,
+    initialFacilityIds,
+    open,
+    schedule
+  ]);
 
   if (!open) return null;
+
+  const visibilityOptions: { value: ScheduleVisibility; label: string }[] = [
+    { value: "public", label: "通常表示" },
+    { value: "busy", label: "予定ありのみ" },
+    { value: "private", label: "自分のみ表示" }
+  ];
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -218,12 +249,6 @@ export function ScheduleDialog({
     }
   }
 
-  const visibilityOptions: { value: ScheduleVisibility; label: string }[] = [
-    { value: "public", label: "通常表示" },
-    { value: "busy", label: "予定ありのみ" },
-    { value: "private", label: "自分のみ表示" }
-  ];
-
   return (
     <div className="dialog-backdrop" onClick={onClose}>
       <div className="dialog-card dialog-card-simple" onClick={(event) => event.stopPropagation()}>
@@ -240,7 +265,12 @@ export function ScheduleDialog({
         <form className="form-grid detail-main" onSubmit={handleSubmit}>
           <label className="field full">
             <span>タイトル</span>
-            <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="予定名を入力" required />
+            <input
+              value={form.title}
+              onChange={(event) => setForm({ ...form, title: event.target.value })}
+              placeholder="予定名を入力"
+              required
+            />
           </label>
 
           <label className="field">
@@ -303,45 +333,58 @@ export function ScheduleDialog({
             </select>
           </label>
 
-          <label className="field">
+          <div className="field full">
             <span>参加者</span>
-            <select
-              multiple
-              value={form.participantUserIds}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  participantUserIds: Array.from(event.target.selectedOptions).map((option) => option.value)
-                })
-              }
-            >
-              {users.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name} / {member.department}
-                </option>
-              ))}
-            </select>
-          </label>
+            <div className="selector-panel">
+              {users.map((member) => {
+                const active = form.participantUserIds.includes(member.id);
+                return (
+                  <label key={member.id} className={active ? "selector-chip active" : "selector-chip"}>
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={() =>
+                        setForm((current) => ({
+                          ...current,
+                          participantUserIds: toggleId(current.participantUserIds, member.id)
+                        }))
+                      }
+                    />
+                    <div>
+                      <span>{member.name}</span>
+                      <small>{member.department || "部署未設定"}</small>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
 
-          <label className="field full">
+          <div className="field full">
             <span>設備・会議室</span>
-            <select
-              multiple
-              value={form.facilityIds}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  facilityIds: Array.from(event.target.selectedOptions).map((option) => option.value)
-                })
-              }
-            >
-              {facilities.map((facility) => (
-                <option key={facility.id} value={facility.id}>
-                  {facility.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <div className="selector-panel selector-panel-compact">
+              {facilities.map((facility) => {
+                const active = form.facilityIds.includes(facility.id);
+                return (
+                  <label key={facility.id} className={active ? "selector-chip active" : "selector-chip"}>
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={() =>
+                        setForm((current) => ({
+                          ...current,
+                          facilityIds: toggleId(current.facilityIds, facility.id)
+                        }))
+                      }
+                    />
+                    <div>
+                      <span>{facility.name}</span>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
 
           <label className="field full">
             <span>メモ</span>
