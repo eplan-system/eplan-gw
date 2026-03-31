@@ -27,7 +27,9 @@ export function WeekBoard({
   onAddFacilitySchedule
 }: Props) {
   const weekDays = buildWeekDays(baseDate);
-  const visibleUsers = department === "all" ? users : users.filter((user) => user.department === department);
+  const showFacilities = department === "all" || department === "facilities";
+  const visibleUsers = department === "all" ? users : department === "facilities" ? [] : users.filter((user) => user.department === department);
+  const visibleFacilities = showFacilities ? facilities : [];
   const dayToneClass = (dayKey: string) => {
     if (isHolidayKey(dayKey) || isSundayKey(dayKey)) return "holiday-cell";
     if (isSaturdayKey(dayKey)) return "saturday-cell";
@@ -129,7 +131,7 @@ export function WeekBoard({
           </div>
         ))}
 
-        {facilities.map((facility) => (
+        {visibleFacilities.map((facility) => (
           <div key={facility.id} className="week-grid">
             <div className="sticky-cell member-cell facility-cell-head">
               <div className="avatar-dot facility-dot" />

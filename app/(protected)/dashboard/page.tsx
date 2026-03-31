@@ -75,9 +75,10 @@ export default function DashboardPage() {
           </div>
           <div className="toolbar-group">
             <label className="filter-field">
-              <span className="filter-label">部署</span>
+              <span className="filter-label">フィルター</span>
               <select value={department} onChange={(event) => setDepartment(event.target.value)}>
-                <option value="all">全部署</option>
+                <option value="all">全部</option>
+                <option value="facilities">設備</option>
                 {departments.map((item) => (
                   <option key={item} value={item}>
                     {item}

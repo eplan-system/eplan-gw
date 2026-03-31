@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { listenAuth, listUsers, signIn as signInService, signOut as signOutService } from "@/lib/data-service";
+import { changePassword as changePasswordService, listenAuth, listUsers, signIn as signInService, signOut as signOutService } from "@/lib/data-service";
 import { auth } from "@/lib/firebase";
 import { AppUser } from "@/lib/types";
 
@@ -12,6 +12,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  changePassword: (currentPassword: string, nextPassword: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -52,7 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  return <AuthContext.Provider value={{ user, loading, signIn, signOut, refreshUser }}>{children}</AuthContext.Provider>;
+  async function changePassword(currentPassword: string, nextPassword: string) {
+    await changePasswordService(currentPassword, nextPassword);
+  }
+
+  return <AuthContext.Provider value={{ user, loading, signIn, signOut, refreshUser, changePassword }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

@@ -2,12 +2,16 @@
 
 import { addDoc, collection, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
 import {
+  EmailAuthProvider,
   browserLocalPersistence,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   setPersistence,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut
+  ,
+  updatePassword as firebaseUpdatePassword
 } from "firebase/auth";
 import { auth, db, isFirebaseConfigured } from "@/lib/firebase";
 import { seedComments, seedFacilities, seedPosts, seedReservations, seedSchedules, seedUsers } from "@/lib/demo-data";
@@ -199,6 +203,16 @@ export async function signOut() {
     return;
   }
   window.localStorage.removeItem(keys.session);
+}
+
+export async function changePassword(currentPassword: string, nextPassword: string) {
+  if (!isFirebaseConfigured || !auth || !auth.currentUser || !auth.currentUser.email) {
+    throw new Error("password-change-unavailable");
+  }
+
+  const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+  await reauthenticateWithCredential(auth.currentUser, credential);
+  await firebaseUpdatePassword(auth.currentUser, nextPassword);
 }
 
 export function listenAuth(callback: (user: AppUser | null) => void) {

@@ -25,7 +25,7 @@ function normalizeUser(user: AppUser): AppUser {
 }
 
 export default function AdminPage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, changePassword } = useAuth();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [facilityCount, setFacilityCount] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
@@ -35,6 +35,11 @@ export default function AdminPage() {
     department: user?.department ?? "未設定",
     mobile: user?.mobile ?? "",
     color: user?.color ?? "#0b7661"
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    nextPassword: "",
+    confirmPassword: ""
   });
   const [userDrafts, setUserDrafts] = useState<UserDraftMap>({});
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
@@ -71,16 +76,6 @@ export default function AdminPage() {
     });
   }, [users]);
 
-  if (user?.role !== "admin") {
-    return (
-      <section className="surface-card">
-        <p className="eyebrow">permission</p>
-        <h3>管理者のみ利用可能</h3>
-        <p className="muted">一般ユーザーは管理画面を利用できません。</p>
-      </section>
-    );
-  }
-
   async function handleProfileSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) return;
@@ -102,7 +97,35 @@ export default function AdminPage() {
       await refresh();
       setStatusMessage("自分のプロフィールを更新しました。");
     } catch {
-      setErrorMessage("プロフィール更新に失敗しました。Firestore ルールや Firebase 設定を確認してください。");
+      setErrorMessage("プロフィール更新に失敗しました。Firestore ルールと Firebase 設定を確認してください。");
+    }
+  }
+
+  async function handlePasswordSave(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatusMessage("");
+    setErrorMessage("");
+
+    if (passwordForm.nextPassword.length < 8) {
+      setErrorMessage("新しいパスワードは8文字以上で入力してください。");
+      return;
+    }
+
+    if (passwordForm.nextPassword !== passwordForm.confirmPassword) {
+      setErrorMessage("新しいパスワードと確認用パスワードが一致していません。");
+      return;
+    }
+
+    try {
+      await changePassword(passwordForm.currentPassword, passwordForm.nextPassword);
+      setPasswordForm({
+        currentPassword: "",
+        nextPassword: "",
+        confirmPassword: ""
+      });
+      setStatusMessage("パスワードを変更しました。次回から新しいパスワードでログインできます。");
+    } catch {
+      setErrorMessage("パスワード変更に失敗しました。現在のパスワードを確認してください。");
     }
   }
 
@@ -122,7 +145,7 @@ export default function AdminPage() {
       await refresh();
       setStatusMessage("メンバー情報を更新しました。");
     } catch {
-      setErrorMessage("メンバー更新に失敗しました。管理者権限と Firestore ルールを確認してください。");
+      setErrorMessage("メンバー情報の更新に失敗しました。Firestore ルールを確認してください。");
     } finally {
       setSavingUserId(null);
     }
@@ -144,6 +167,16 @@ export default function AdminPage() {
     }
   }
 
+  if (user?.role !== "admin") {
+    return (
+      <section className="surface-card">
+        <p className="eyebrow">permission</p>
+        <h3>管理機能は管理者のみ利用できます</h3>
+        <p className="muted">一般ユーザーはこの画面を利用できません。</p>
+      </section>
+    );
+  }
+
   return (
     <div className="page-stack">
       <section className="surface-card">
@@ -159,7 +192,7 @@ export default function AdminPage() {
         {pendingUsers.length > 0 ? (
           <div className="onboarding-panel">
             <strong>初期設定待ちのメンバーがあります</strong>
-            <p>{pendingUsers.length}名が部署または携帯番号未設定です。週間表で見やすくするため、ここでまとめて整えてください。</p>
+            <p>{pendingUsers.length}名が部署未設定または電話番号未設定です。週表示で見やすくするため、ここで先に整えてください。</p>
           </div>
         ) : null}
         {statusMessage ? <p className="success-text">{statusMessage}</p> : null}
@@ -221,6 +254,46 @@ export default function AdminPage() {
       </section>
 
       <section className="surface-card">
+        <p className="eyebrow">security</p>
+        <h3>パスワード変更</h3>
+        <p className="muted">ログイン中の本人だけが自分のパスワードを変更できます。変更すると Firebase Authentication のログイン情報が更新されます。</p>
+        <form className="form-grid compact-form-grid" onSubmit={handlePasswordSave}>
+          <label className="field">
+            <span>現在のパスワード</span>
+            <input
+              type="password"
+              value={passwordForm.currentPassword}
+              onChange={(event) => setPasswordForm({ ...passwordForm, currentPassword: event.target.value })}
+              required
+            />
+          </label>
+          <label className="field">
+            <span>新しいパスワード</span>
+            <input
+              type="password"
+              value={passwordForm.nextPassword}
+              onChange={(event) => setPasswordForm({ ...passwordForm, nextPassword: event.target.value })}
+              required
+            />
+          </label>
+          <label className="field">
+            <span>新しいパスワード確認</span>
+            <input
+              type="password"
+              value={passwordForm.confirmPassword}
+              onChange={(event) => setPasswordForm({ ...passwordForm, confirmPassword: event.target.value })}
+              required
+            />
+          </label>
+          <div className="full">
+            <button className="primary-button" type="submit">
+              パスワードを変更
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="surface-card">
         <div className="section-head">
           <div>
             <p className="eyebrow">member editor</p>
@@ -229,7 +302,7 @@ export default function AdminPage() {
           <span className="status-badge">{orderedUsers.length}名</span>
         </div>
         <p className="muted">
-          ここで編集できるのは Users コレクションの表示用プロフィールです。本人がログイン中でも、管理者が名前・部署・権限・表示順を統一できます。
+          ここで編集できるのは Users コレクションの表示用プロフィールです。表示名・部署・権限・並び順・色をこの画面で統一できます。
         </p>
         <div className="editable-user-stack">
           {orderedUsers.map((item) => {
