@@ -251,6 +251,15 @@ button, input, select, textarea { font: inherit; }
   flex-wrap: wrap;
 }
 
+.settings-card {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-form-wrap {
+  width: min(980px, 100%);
+}
+
 .editable-user-stack {
   display: grid;
   gap: 14px;

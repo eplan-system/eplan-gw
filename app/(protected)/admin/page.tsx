@@ -170,7 +170,7 @@ export default function AdminPage() {
 
   return (
     <div className="page-stack">
-      <section className="surface-card">
+      <section className="surface-card settings-card">
         <p className="eyebrow">display settings</p>
         <h3>{isAdmin ? "表示設定" : "個人設定"}</h3>
         <p className="muted">
@@ -182,89 +182,95 @@ export default function AdminPage() {
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
       </section>
 
-      <section className="surface-card">
+      <section className="surface-card settings-card">
         <p className="eyebrow">my profile</p>
         <h3>プロフィール変更</h3>
-        <form className="form-grid" onSubmit={handleProfileSave}>
-          <label className="field">
-            <span>表示名</span>
-            <input value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} required />
-          </label>
-          <label className="field">
-            <span>部署</span>
-            <select value={profileForm.department} onChange={(event) => setProfileForm({ ...profileForm, department: event.target.value })}>
-              {DEPARTMENT_OPTIONS.map((department) => (
-                <option key={department} value={department}>
-                  {department}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>携帯番号</span>
-            <input value={profileForm.mobile} onChange={(event) => setProfileForm({ ...profileForm, mobile: event.target.value })} />
-          </label>
-          <label className="field">
-            <span>色</span>
-            <input type="color" value={profileForm.color} onChange={(event) => setProfileForm({ ...profileForm, color: event.target.value })} />
-          </label>
-          <div className="full">
-            <button className="primary-button" type="submit">
-              プロフィールを保存
-            </button>
-          </div>
-        </form>
+        <div className="settings-form-wrap">
+          <form className="form-grid" onSubmit={handleProfileSave}>
+            <label className="field">
+              <span>表示名</span>
+              <input value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} required />
+            </label>
+            <label className="field">
+              <span>部署</span>
+              <select value={profileForm.department} onChange={(event) => setProfileForm({ ...profileForm, department: event.target.value })}>
+                {DEPARTMENT_OPTIONS.map((department) => (
+                  <option key={department} value={department}>
+                    {department}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>携帯番号</span>
+              <input value={profileForm.mobile} onChange={(event) => setProfileForm({ ...profileForm, mobile: event.target.value })} />
+            </label>
+            <label className="field">
+              <span>色</span>
+              <input type="color" value={profileForm.color} onChange={(event) => setProfileForm({ ...profileForm, color: event.target.value })} />
+            </label>
+            <div className="full">
+              <button className="primary-button" type="submit">
+                プロフィールを保存
+              </button>
+            </div>
+          </form>
+        </div>
       </section>
 
-      <section className="surface-card">
+      <section className="surface-card settings-card">
         <p className="eyebrow">security</p>
         <h3>パスワード変更</h3>
         <p className="muted">変更後は Firebase Authentication のログイン用パスワードも更新されます。</p>
-        <form className="form-grid compact-form-grid" onSubmit={handlePasswordSave}>
-          <label className="field">
-            <span>現在のパスワード</span>
-            <input
-              type="password"
-              value={passwordForm.currentPassword}
-              onChange={(event) => setPasswordForm({ ...passwordForm, currentPassword: event.target.value })}
-              required
-            />
-          </label>
-          <label className="field">
-            <span>新しいパスワード</span>
-            <input
-              type="password"
-              value={passwordForm.nextPassword}
-              onChange={(event) => setPasswordForm({ ...passwordForm, nextPassword: event.target.value })}
-              required
-            />
-          </label>
-          <label className="field">
-            <span>新しいパスワード確認</span>
-            <input
-              type="password"
-              value={passwordForm.confirmPassword}
-              onChange={(event) => setPasswordForm({ ...passwordForm, confirmPassword: event.target.value })}
-              required
-            />
-          </label>
-          <div className="full">
-            <button className="primary-button" type="submit">
-              パスワードを変更
-            </button>
-          </div>
-        </form>
+        <div className="settings-form-wrap">
+          <form className="form-grid compact-form-grid" onSubmit={handlePasswordSave}>
+            <label className="field">
+              <span>現在のパスワード</span>
+              <input
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(event) => setPasswordForm({ ...passwordForm, currentPassword: event.target.value })}
+                required
+              />
+            </label>
+            <label className="field">
+              <span>新しいパスワード</span>
+              <input
+                type="password"
+                value={passwordForm.nextPassword}
+                onChange={(event) => setPasswordForm({ ...passwordForm, nextPassword: event.target.value })}
+                required
+              />
+            </label>
+            <label className="field">
+              <span>新しいパスワード確認</span>
+              <input
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(event) => setPasswordForm({ ...passwordForm, confirmPassword: event.target.value })}
+                required
+              />
+            </label>
+            <div className="full">
+              <button className="primary-button" type="submit">
+                パスワードを変更
+              </button>
+            </div>
+          </form>
+        </div>
       </section>
 
-      <section className="surface-card">
+      <section className="surface-card settings-card">
         <p className="eyebrow">external calendar</p>
         <h3>外部カレンダー連携</h3>
-        <p className="muted">
-          Google カレンダーなどへの一方向同期は、この設定画面で管理する想定です。現在は準備中で、向こう3か月分などの予定を外部カレンダーへ同期する機能をここに追加していきます。
-        </p>
-        <div className="info-strip" style={{ marginTop: 12 }}>
-          <strong>現在の状態</strong>
-          <p>予定画面にあった一時的な追加ボタンは廃止しました。今後の同期設定はこの画面にまとめていきます。</p>
+        <div className="settings-form-wrap">
+          <p className="muted">
+            Google カレンダーなどへの一方向同期は、この設定画面で管理する想定です。現在は準備中で、向こう3か月分などの予定を外部カレンダーへ同期する機能をここに追加していきます。
+          </p>
+          <div className="info-strip" style={{ marginTop: 12 }}>
+            <strong>現在の状態</strong>
+            <p>予定画面にあった一時的な追加ボタンは廃止しました。今後の同期設定はこの画面にまとめていきます。</p>
+          </div>
         </div>
       </section>
 
