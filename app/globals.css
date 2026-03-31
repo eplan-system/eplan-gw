@@ -272,6 +272,11 @@ button, input, select, textarea { font: inherit; }
   align-items: end;
 }
 
+.profile-inline-grid {
+  grid-template-columns: minmax(220px, 280px) minmax(140px, 180px) minmax(150px, 180px) 96px;
+  justify-content: start;
+}
+
 .settings-inline-grid .field {
   margin-bottom: 0;
 }

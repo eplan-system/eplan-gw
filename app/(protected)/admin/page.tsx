@@ -186,7 +186,7 @@ export default function AdminPage() {
         <p className="eyebrow">my profile</p>
         <h3>プロフィール変更</h3>
         <div className="settings-form-wrap">
-          <form className="form-grid settings-inline-grid" onSubmit={handleProfileSave}>
+          <form className="form-grid settings-inline-grid profile-inline-grid" onSubmit={handleProfileSave}>
             <label className="field">
               <span>表示名</span>
               <input value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} required />
