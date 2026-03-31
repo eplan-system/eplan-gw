@@ -66,10 +66,6 @@ function splitLocalDateTime(value: string) {
   };
 }
 
-function toggleId(current: string[], id: string) {
-  return current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
-}
-
 const TIME_OPTIONS = Array.from({ length: 24 * 12 }, (_, index) => {
   const hour = String(Math.floor(index / 12)).padStart(2, "0");
   const minute = String((index % 12) * 5).padStart(2, "0");
@@ -333,58 +329,47 @@ export function ScheduleDialog({
             </select>
           </label>
 
-          <div className="field full">
+          <label className="field full">
             <span>参加者</span>
-            <div className="selector-panel">
-              {users.map((member) => {
-                const active = form.participantUserIds.includes(member.id);
-                return (
-                  <label key={member.id} className={active ? "selector-chip active" : "selector-chip"}>
-                    <input
-                      type="checkbox"
-                      checked={active}
-                      onChange={() =>
-                        setForm((current) => ({
-                          ...current,
-                          participantUserIds: toggleId(current.participantUserIds, member.id)
-                        }))
-                      }
-                    />
-                    <div>
-                      <span>{member.name}</span>
-                      <small>{member.department || "部署未設定"}</small>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+            <select
+              multiple
+              size={Math.min(Math.max(users.length, 4), 8)}
+              value={form.participantUserIds}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  participantUserIds: Array.from(event.target.selectedOptions).map((option) => option.value)
+                })
+              }
+            >
+              {users.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name} / {member.department || "部署未設定"}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <div className="field full">
+          <label className="field full">
             <span>設備・会議室</span>
-            <div className="selector-panel selector-panel-compact">
-              {facilities.map((facility) => {
-                const active = form.facilityIds.includes(facility.id);
-                return (
-                  <label key={facility.id} className={active ? "selector-chip active" : "selector-chip"}>
-                    <input
-                      type="checkbox"
-                      checked={active}
-                      onChange={() =>
-                        setForm((current) => ({
-                          ...current,
-                          facilityIds: toggleId(current.facilityIds, facility.id)
-                        }))
-                      }
-                    />
-                    <div>
-                      <span>{facility.name}</span>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+            <select
+              multiple
+              size={Math.min(Math.max(facilities.length, 4), 8)}
+              value={form.facilityIds}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  facilityIds: Array.from(event.target.selectedOptions).map((option) => option.value)
+                })
+              }
+            >
+              {facilities.map((facility) => (
+                <option key={facility.id} value={facility.id}>
+                  {facility.name}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="field full">
             <span>メモ</span>
