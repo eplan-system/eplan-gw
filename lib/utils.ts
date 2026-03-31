@@ -1,6 +1,19 @@
 import { WEEKDAY_LABELS } from "@/lib/constants";
 import { AppUser, RecurrenceRule, ScheduleDraft, ScheduleItem } from "@/lib/types";
 
+const TOKYO_DATE_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit"
+});
+
+const TOKYO_TIME_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  hour: "2-digit",
+  minute: "2-digit"
+});
+
 export function formatDateKey(date = new Date()) {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -18,7 +31,11 @@ export function formatDateTime(value: string) {
 }
 
 export function localDateKeyFromIso(value: string) {
-  return formatDateKey(new Date(value));
+  const parts = TOKYO_DATE_FORMATTER.formatToParts(new Date(value));
+  const year = parts.find((part) => part.type === "year")?.value ?? "";
+  const month = parts.find((part) => part.type === "month")?.value ?? "";
+  const day = parts.find((part) => part.type === "day")?.value ?? "";
+  return `${year}-${month}-${day}`;
 }
 
 export function formatScheduleTimeLabel(schedule: ScheduleItem) {
@@ -26,13 +43,7 @@ export function formatScheduleTimeLabel(schedule: ScheduleItem) {
     return "終日";
   }
 
-  return `${new Date(schedule.startAt).toLocaleTimeString("ja-JP", {
-    hour: "2-digit",
-    minute: "2-digit"
-  })} - ${new Date(schedule.endAt).toLocaleTimeString("ja-JP", {
-    hour: "2-digit",
-    minute: "2-digit"
-  })}`;
+  return `${TOKYO_TIME_FORMATTER.format(new Date(schedule.startAt))} - ${TOKYO_TIME_FORMATTER.format(new Date(schedule.endAt))}`;
 }
 
 export function startOfWeek(base = new Date()) {

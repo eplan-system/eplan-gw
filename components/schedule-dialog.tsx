@@ -11,7 +11,14 @@ import {
   ScheduleItem,
   ScheduleVisibility
 } from "@/lib/types";
-import { formatDateKey, recurrenceSummary } from "@/lib/utils";
+import { formatDateKey, localDateKeyFromIso, recurrenceSummary } from "@/lib/utils";
+
+const TOKYO_TIME_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false
+});
 
 type Props = {
   open: boolean;
@@ -29,9 +36,7 @@ type Props = {
 
 function toLocalDateTime(value: string) {
   const date = new Date(value);
-  const offset = date.getTimezoneOffset();
-  const local = new Date(date.getTime() - offset * 60000);
-  return local.toISOString().slice(0, 16);
+  return `${localDateKeyFromIso(value)}T${TOKYO_TIME_FORMATTER.format(date)}`;
 }
 
 function toIsoFromLocalDateTime(value: string) {
@@ -42,7 +47,7 @@ function toIsoFromLocalDateTime(value: string) {
 
   const [year, month, day] = datePart.split("-").map(Number);
   const [hour, minute] = timePart.split(":").map(Number);
-  return new Date(year, month - 1, day, hour, minute, 0, 0).toISOString();
+  return new Date(Date.UTC(year, month - 1, day, hour - 9, minute, 0, 0)).toISOString();
 }
 
 function defaultRange(dateKey: string) {
