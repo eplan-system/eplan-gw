@@ -254,9 +254,16 @@ button, input, select, textarea { font: inherit; }
 .settings-card {
   display: grid;
   gap: 12px;
+  width: min(1020px, 100%);
 }
 
 .settings-form-wrap {
+  width: min(900px, 100%);
+}
+
+.settings-card .muted,
+.settings-card .info-strip,
+.settings-card .onboarding-panel {
   width: min(900px, 100%);
 }
 
