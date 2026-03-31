@@ -239,7 +239,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="page-stack">
+    <div className="page-stack settings-page">
       <section className="surface-card settings-card">
         <p className="eyebrow">display settings</p>
         <h3>{isAdmin ? "表示設定" : "個人設定"}</h3>
@@ -361,7 +361,7 @@ export default function AdminPage() {
 
       {isAdmin ? (
         <>
-          <section className="surface-card">
+          <section className="surface-card settings-admin-card">
             <p className="eyebrow">admin tools</p>
             <h3>管理者向け設定</h3>
             <p className="muted">初期設備の反映やメンバーの表示調整は、管理者だけが利用できます。</p>
@@ -397,7 +397,7 @@ export default function AdminPage() {
             </div>
           </section>
 
-          <section className="surface-card">
+          <section className="surface-card settings-admin-card">
             <div className="section-head">
               <div>
                 <p className="eyebrow">member editor</p>

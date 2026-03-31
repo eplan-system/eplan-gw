@@ -107,6 +107,10 @@ button, input, select, textarea { font: inherit; }
 .topbar, .surface-card { padding: 12px 14px; min-width: 0; max-width: 100%; }
 .main-area { display: grid; gap: 16px; }
 .page-stack, .list-stack, .comment-list, .mobile-day-list { display: grid; gap: 16px; min-width: 0; }
+.settings-page {
+  justify-items: center;
+  align-content: start;
+}
 .hero-grid, .stats-grid, .split-grid { display: grid; gap: 16px; }
 .split-grid { grid-template-columns: 1.05fr 0.95fr; }
 .stat-card strong { display: block; font-size: 2rem; margin-bottom: 8px; }
@@ -254,21 +258,28 @@ button, input, select, textarea { font: inherit; }
 .settings-card {
   display: grid;
   gap: 12px;
-  width: min(1020px, 100%);
+  width: min(920px, 100%);
+}
+
+.settings-admin-card {
+  width: min(920px, 100%);
 }
 
 .settings-form-wrap {
-  width: min(900px, 100%);
+  width: 100%;
+  max-width: 760px;
 }
 
 .settings-card .muted,
 .settings-card .info-strip,
 .settings-card .onboarding-panel {
-  width: min(900px, 100%);
+  width: 100%;
+  max-width: 760px;
 }
 
 .calendar-sync-panel {
-  width: min(900px, 100%);
+  width: 100%;
+  max-width: 760px;
   display: grid;
   gap: 12px;
 }
@@ -300,6 +311,7 @@ button, input, select, textarea { font: inherit; }
 .editable-user-stack {
   display: grid;
   gap: 14px;
+  width: 100%;
 }
 
 .editable-user-card {
@@ -309,6 +321,7 @@ button, input, select, textarea { font: inherit; }
   padding: 14px;
   display: grid;
   gap: 12px;
+  width: 100%;
 }
 
 .editable-user-head {
