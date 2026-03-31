@@ -21,6 +21,7 @@ export interface AppUser {
   color: string;
   mobile: string;
   sortOrder: number;
+  calendarSyncToken?: string;
 }
 
 export interface ScheduleItem {

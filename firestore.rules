@@ -38,5 +38,15 @@ service cloud.firestore {
     match /Comments/{commentId} {
       allow read, write: if isSignedIn();
     }
+
+    match /CalendarFeeds/{token} {
+      allow read: if true;
+      allow write: if isSignedIn();
+
+      match /Items/{itemId} {
+        allow read: if true;
+        allow write: if isSignedIn();
+      }
+    }
   }
 }

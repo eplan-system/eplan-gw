@@ -3,7 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { DEPARTMENT_OPTIONS } from "@/lib/constants";
-import { deleteUser, listFacilities, listUsers, saveUser, seedDefaultFacilities } from "@/lib/data-service";
+import {
+  deleteUser,
+  ensureCalendarSync,
+  getCalendarSyncUrl,
+  listFacilities,
+  listUsers,
+  regenerateCalendarSync,
+  saveUser,
+  seedDefaultFacilities
+} from "@/lib/data-service";
 import { AppUser } from "@/lib/types";
 import { sortUsersForDisplay } from "@/lib/utils";
 
@@ -47,6 +56,8 @@ export default function AdminPage() {
     nextPassword: "",
     confirmPassword: ""
   });
+  const [calendarSyncUrl, setCalendarSyncUrl] = useState("");
+  const [syncBusy, setSyncBusy] = useState(false);
   const [userDrafts, setUserDrafts] = useState<UserDraftMap>({});
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
 
@@ -65,6 +76,15 @@ export default function AdminPage() {
 
   useEffect(() => {
     setProfileForm(buildProfileForm(user));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user?.calendarSyncToken) {
+      setCalendarSyncUrl("");
+      return;
+    }
+
+    setCalendarSyncUrl(getCalendarSyncUrl(user.calendarSyncToken, window.location.origin));
   }, [user]);
 
   useEffect(() => {
@@ -98,7 +118,7 @@ export default function AdminPage() {
       await refresh();
       setStatusMessage("プロフィールを更新しました。");
     } catch {
-      setErrorMessage("プロフィールの更新に失敗しました。Firestore ルールと Firebase 設定を確認してください。");
+      setErrorMessage("プロフィールの更新に失敗しました。Firestore 設定を確認してください。");
     }
   }
 
@@ -108,7 +128,7 @@ export default function AdminPage() {
     setErrorMessage("");
 
     if (passwordForm.nextPassword.length < 8) {
-      setErrorMessage("新しいパスワードは8文字以上で入力してください。");
+      setErrorMessage("新しいパスワードは 8 文字以上で入力してください。");
       return;
     }
 
@@ -124,9 +144,59 @@ export default function AdminPage() {
         nextPassword: "",
         confirmPassword: ""
       });
-      setStatusMessage("パスワードを変更しました。次回から新しいパスワードでログインできます。");
+      setStatusMessage("パスワードを更新しました。次回から新しいパスワードでログインできます。");
     } catch {
-      setErrorMessage("パスワードの変更に失敗しました。現在のパスワードを確認してください。");
+      setErrorMessage("パスワードの更新に失敗しました。現在のパスワードを確認してください。");
+    }
+  }
+
+  async function handleEnsureCalendarSync() {
+    if (!user) return;
+
+    setSyncBusy(true);
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const result = await ensureCalendarSync(user, window.location.origin);
+      setCalendarSyncUrl(result.url);
+      await refreshUser();
+      setStatusMessage("Google カレンダー購読用のURLを用意しました。");
+    } catch {
+      setErrorMessage("購読URLの準備に失敗しました。Firebase 設定を確認してください。");
+    } finally {
+      setSyncBusy(false);
+    }
+  }
+
+  async function handleRegenerateCalendarSync() {
+    if (!user) return;
+
+    setSyncBusy(true);
+    setStatusMessage("");
+    setErrorMessage("");
+
+    try {
+      const result = await regenerateCalendarSync(user, window.location.origin);
+      setCalendarSyncUrl(result.url);
+      await refreshUser();
+      setStatusMessage("購読URLを再発行しました。Google カレンダー側は新しいURLへ差し替えてください。");
+    } catch {
+      setErrorMessage("購読URLの再発行に失敗しました。Firebase 設定を確認してください。");
+    } finally {
+      setSyncBusy(false);
+    }
+  }
+
+  async function handleCopyCalendarSyncUrl() {
+    if (!calendarSyncUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(calendarSyncUrl);
+      setStatusMessage("購読URLをコピーしました。");
+      setErrorMessage("");
+    } catch {
+      setErrorMessage("URLのコピーに失敗しました。");
     }
   }
 
@@ -146,7 +216,7 @@ export default function AdminPage() {
       await refresh();
       setStatusMessage("メンバー情報を更新しました。");
     } catch {
-      setErrorMessage("メンバー情報の更新に失敗しました。Firestore ルールを確認してください。");
+      setErrorMessage("メンバー情報の更新に失敗しました。Firestore 設定を確認してください。");
     } finally {
       setSavingUserId(null);
     }
@@ -164,7 +234,7 @@ export default function AdminPage() {
       await refresh();
       setStatusMessage("プロフィールを一覧から削除しました。");
     } catch {
-      setErrorMessage("プロフィール削除に失敗しました。Firestore ルールを確認してください。");
+      setErrorMessage("プロフィール削除に失敗しました。Firestore 設定を確認してください。");
     }
   }
 
@@ -175,7 +245,7 @@ export default function AdminPage() {
         <h3>{isAdmin ? "表示設定" : "個人設定"}</h3>
         <p className="muted">
           {isAdmin
-            ? "表示名、部署、並び順など、画面上の見え方をここで整えられます。ログイン用メールアドレスとパスワード本体は Firebase Authentication で管理されます。"
+            ? "表示名、部署、並び順など、見え方に関する設定をここで揃えられます。ログイン用メールアドレスとパスワード管理は Firebase Authentication で動作します。"
             : "この画面では自分の表示名、部署、携帯番号、色、パスワードを変更できます。"}
         </p>
         {statusMessage ? <p className="success-text">{statusMessage}</p> : null}
@@ -253,7 +323,7 @@ export default function AdminPage() {
             </label>
             <div className="full settings-action-row">
               <button className="primary-button" type="submit">
-                パスワードを変更
+                パスワードを更新
               </button>
             </div>
           </form>
@@ -262,14 +332,29 @@ export default function AdminPage() {
 
       <section className="surface-card settings-card">
         <p className="eyebrow">external calendar</p>
-        <h3>外部カレンダー連携</h3>
+        <h3>Google カレンダー連携</h3>
         <div className="settings-form-wrap">
-          <p className="muted">
-            Google カレンダーなどへの一方向同期は、この設定画面で管理する想定です。現在は準備中で、向こう3か月分などの予定を外部カレンダーへ同期する機能をここに追加していきます。
-          </p>
+          <p className="muted">自分の予定を向こう3か月分だけ `.ics` で配信します。Google カレンダー側で URL 購読すると、ワンウェイで反映されます。</p>
+          <div className="calendar-sync-panel">
+            <label className="field">
+              <span>購読URL</span>
+              <input value={calendarSyncUrl} readOnly placeholder="まだ発行されていません" />
+            </label>
+            <div className="toolbar-group">
+              <button className="small-button" type="button" onClick={() => void handleEnsureCalendarSync()} disabled={syncBusy}>
+                {syncBusy ? "準備中..." : calendarSyncUrl ? "URLを確認" : "URLを発行"}
+              </button>
+              <button className="small-button" type="button" onClick={() => void handleCopyCalendarSyncUrl()} disabled={!calendarSyncUrl || syncBusy}>
+                URLコピー
+              </button>
+              <button className="small-button" type="button" onClick={() => void handleRegenerateCalendarSync()} disabled={!calendarSyncUrl || syncBusy}>
+                URL再発行
+              </button>
+            </div>
+          </div>
           <div className="info-strip" style={{ marginTop: 12 }}>
-            <strong>現在の状態</strong>
-            <p>予定画面にあった一時的な追加ボタンは廃止しました。今後の同期設定はこの画面にまとめていきます。</p>
+            <strong>使い方</strong>
+            <p>Google カレンダーを PC で開き、`他のカレンダー &gt; URL で追加` にこの URL を登録してください。完全非表示の予定も本人用URLでは表示されます。</p>
           </div>
         </div>
       </section>
@@ -287,7 +372,7 @@ export default function AdminPage() {
             {pendingUsers.length > 0 ? (
               <div className="onboarding-panel">
                 <strong>初期設定待ちのメンバーがあります</strong>
-                <p>{pendingUsers.length}名が部署または携帯番号未設定です。運用開始前にここで整えてください。</p>
+                <p>{pendingUsers.length}名が「部署未設定」または「携帯番号未設定」です。管理画面から表示名・部署・表示順を揃えると、週間表がさらに見やすくなります。</p>
               </div>
             ) : null}
             <div className="toolbar-group" style={{ marginTop: 12 }}>
@@ -303,7 +388,7 @@ export default function AdminPage() {
                     await refresh();
                     setStatusMessage("初期設備を反映しました。");
                   } catch {
-                    setErrorMessage("初期設備の反映に失敗しました。Firestore ルールを確認してください。");
+                    setErrorMessage("初期設備の反映に失敗しました。Firestore 設定を確認してください。");
                   }
                 }}
               >
@@ -320,7 +405,7 @@ export default function AdminPage() {
               </div>
               <span className="status-badge">{orderedUsers.length}名</span>
             </div>
-            <p className="muted">表示名、部署、権限、表示順、色をここで揃えると、週表示や月表示が見やすくなります。</p>
+            <p className="muted">表示名、部署、権限、表示順、色をここで揃えると、一覧表示が見やすくなります。</p>
             <div className="editable-user-stack">
               {orderedUsers.map((item) => {
                 const draft = userDrafts[item.id] ?? item;

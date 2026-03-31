@@ -37,6 +37,8 @@ type Snapshot = {
   comments: BoardComment[];
 };
 
+const CALENDAR_SYNC_MONTHS = 3;
+
 function removeUndefinedDeep<T>(value: T): T {
   if (Array.isArray(value)) {
     return value.map((item) => removeUndefinedDeep(item)).filter((item) => item !== undefined) as T;
@@ -104,6 +106,102 @@ function readDemoStore(): Snapshot {
     posts: readSeed(keys.posts, seedPosts),
     comments: readSeed(keys.comments, seedComments)
   };
+}
+
+function addMonths(base: Date, months: number) {
+  const next = new Date(base);
+  next.setMonth(next.getMonth() + months);
+  return next;
+}
+
+function buildCalendarSyncToken() {
+  const tokenBase =
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID().replace(/-/g, "") : `${Date.now()}${Math.random().toString(36).slice(2, 12)}`;
+  return `sync_${tokenBase}`;
+}
+
+function buildCalendarSyncUrl(token: string, origin?: string) {
+  const base =
+    origin ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (typeof window !== "undefined" ? window.location.origin : "https://eplan-gw.vercel.app");
+  return `${base.replace(/\/$/, "")}/api/calendar-feed/${token}`;
+}
+
+function buildCalendarWindow() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = addMonths(start, CALENDAR_SYNC_MONTHS);
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
+}
+
+function scheduleInCalendarWindow(schedule: ScheduleItem) {
+  const { start, end } = buildCalendarWindow();
+  const scheduleStart = new Date(schedule.startAt);
+  return scheduleStart >= start && scheduleStart <= end;
+}
+
+function scheduleForUser(schedule: ScheduleItem, userId: string) {
+  return schedule.ownerUserId === userId || schedule.participantUserIds.includes(userId);
+}
+
+async function deleteCalendarFeed(token: string) {
+  if (!db) return;
+  const firestore = db;
+
+  const itemsSnapshot = await getDocs(collection(firestore, "CalendarFeeds", token, "Items"));
+  await Promise.all(itemsSnapshot.docs.map((item) => deleteDoc(doc(firestore, "CalendarFeeds", token, "Items", item.id))));
+  await deleteDoc(doc(firestore, "CalendarFeeds", token));
+}
+
+async function syncCalendarFeedForUser(user: AppUser, schedules: ScheduleItem[]) {
+  if (!isFirebaseConfigured || !db || !user.calendarSyncToken) return;
+  const firestore = db;
+
+  const token = user.calendarSyncToken;
+  const feedSchedules = schedules.filter((schedule) => scheduleForUser(schedule, user.id) && scheduleInCalendarWindow(schedule));
+  const itemsCollection = collection(firestore, "CalendarFeeds", token, "Items");
+  const existingItems = await getDocs(itemsCollection);
+  const nextIds = new Set(feedSchedules.map((schedule) => schedule.id));
+
+  await Promise.all(
+    existingItems.docs
+      .filter((item) => !nextIds.has(item.id))
+      .map((item) => deleteDoc(doc(firestore, "CalendarFeeds", token, "Items", item.id)))
+  );
+
+  await Promise.all(
+    feedSchedules.map((schedule) =>
+      setDoc(doc(firestore, "CalendarFeeds", token, "Items", schedule.id), {
+        id: schedule.id,
+        title: schedule.title,
+        startAt: schedule.startAt,
+        endAt: schedule.endAt,
+        memo: schedule.memo,
+        visibility: schedule.visibility,
+        ownerUserId: schedule.ownerUserId,
+        participantUserIds: schedule.participantUserIds,
+        updatedAt: schedule.updatedAt,
+        createdAt: schedule.createdAt
+      })
+    )
+  );
+
+  await setDoc(doc(firestore, "CalendarFeeds", token), {
+    token,
+    userId: user.id,
+    userName: user.name,
+    updatedAt: new Date().toISOString()
+  });
+}
+
+async function syncCalendarFeedsForUsers(userIds: string[], schedules?: ScheduleItem[]) {
+  if (!isFirebaseConfigured || !db || userIds.length === 0) return;
+
+  const [users, sourceSchedules] = await Promise.all([listUsers(), schedules ? Promise.resolve(schedules) : listSchedules()]);
+  const targets = users.filter((user) => userIds.includes(user.id) && user.calendarSyncToken);
+  await Promise.all(targets.map((user) => syncCalendarFeedForUser(user, sourceSchedules)));
 }
 
 async function readCollection<T>(name: string): Promise<T[]> {
@@ -254,6 +352,9 @@ export function listenAuth(callback: (user: AppUser | null) => void) {
 export async function saveUser(user: AppUser) {
   if (isFirebaseConfigured && db) {
     await setDoc(doc(db, "Users", user.id), user);
+    if (user.calendarSyncToken) {
+      await syncCalendarFeedForUser(user, await listSchedules());
+    }
     return user;
   }
 
@@ -263,6 +364,32 @@ export async function saveUser(user: AppUser) {
     : [user, ...snapshot.users];
   writeSeed(keys.users, next);
   return user;
+}
+
+export function getCalendarSyncUrl(token: string, origin?: string) {
+  return buildCalendarSyncUrl(token, origin);
+}
+
+export async function ensureCalendarSync(user: AppUser, origin?: string) {
+  const nextUser = user.calendarSyncToken ? user : { ...user, calendarSyncToken: buildCalendarSyncToken() };
+  await saveUser(nextUser);
+  return {
+    user: nextUser,
+    url: buildCalendarSyncUrl(nextUser.calendarSyncToken!, origin)
+  };
+}
+
+export async function regenerateCalendarSync(user: AppUser, origin?: string) {
+  if (isFirebaseConfigured && db && user.calendarSyncToken) {
+    await deleteCalendarFeed(user.calendarSyncToken);
+  }
+
+  const nextUser = { ...user, calendarSyncToken: buildCalendarSyncToken() };
+  await saveUser(nextUser);
+  return {
+    user: nextUser,
+    url: buildCalendarSyncUrl(nextUser.calendarSyncToken!, origin)
+  };
 }
 
 export async function deleteUser(userId: string) {
@@ -291,6 +418,9 @@ export async function saveSchedule(schedule: ScheduleDraft) {
 
   if (isFirebaseConfigured && db) {
     await setDoc(doc(db, "Schedules", payload.id), payload);
+    await syncCalendarFeedsForUsers(
+      Array.from(new Set([payload.ownerUserId, ...payload.participantUserIds, ...(existing ? [existing.ownerUserId, ...existing.participantUserIds] : [])]))
+    );
     return payload;
   }
 
@@ -304,7 +434,11 @@ export async function saveSchedule(schedule: ScheduleDraft) {
 
 export async function deleteSchedule(scheduleId: string) {
   if (isFirebaseConfigured && db) {
+    const existing = (await listSchedules()).find((item) => item.id === scheduleId);
     await deleteDoc(doc(db, "Schedules", scheduleId));
+    if (existing) {
+      await syncCalendarFeedsForUsers(Array.from(new Set([existing.ownerUserId, ...existing.participantUserIds])));
+    }
     return;
   }
 
