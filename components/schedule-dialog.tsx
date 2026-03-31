@@ -45,9 +45,7 @@ function toIsoFromLocalDateTime(value: string) {
     throw new Error("invalid-datetime");
   }
 
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute] = timePart.split(":").map(Number);
-  return new Date(Date.UTC(year, month - 1, day, hour - 9, minute, 0, 0)).toISOString();
+  return `${datePart}T${timePart}:00+09:00`;
 }
 
 function defaultRange(dateKey: string) {

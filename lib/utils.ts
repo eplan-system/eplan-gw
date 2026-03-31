@@ -1,7 +1,7 @@
 import { WEEKDAY_LABELS } from "@/lib/constants";
 import { AppUser, RecurrenceRule, ScheduleDraft, ScheduleItem } from "@/lib/types";
 
-const TOKYO_DATE_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+const TOKYO_DATE_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
   year: "numeric",
   month: "2-digit",
@@ -36,6 +36,17 @@ export function localDateKeyFromIso(value: string) {
   const month = parts.find((part) => part.type === "month")?.value ?? "";
   const day = parts.find((part) => part.type === "day")?.value ?? "";
   return `${year}-${month}-${day}`;
+}
+
+export function formatTokyoIso(date: Date) {
+  const dateParts = TOKYO_DATE_FORMATTER.formatToParts(date);
+  const timeParts = TOKYO_TIME_FORMATTER.formatToParts(date);
+  const year = dateParts.find((part) => part.type === "year")?.value ?? "1970";
+  const month = dateParts.find((part) => part.type === "month")?.value ?? "01";
+  const day = dateParts.find((part) => part.type === "day")?.value ?? "01";
+  const hour = timeParts.find((part) => part.type === "hour")?.value ?? "00";
+  const minute = timeParts.find((part) => part.type === "minute")?.value ?? "00";
+  return `${year}-${month}-${day}T${hour}:${minute}:00+09:00`;
 }
 
 export function formatScheduleTimeLabel(schedule: ScheduleItem) {
@@ -406,8 +417,8 @@ export function expandRecurringSchedules(schedule: ScheduleDraft) {
       const nextEnd = new Date(nextStart.getTime() + durationMs);
       occurrences.push({
         ...schedule,
-        startAt: nextStart.toISOString(),
-        endAt: nextEnd.toISOString(),
+        startAt: formatTokyoIso(nextStart),
+        endAt: formatTokyoIso(nextEnd),
         seriesId,
         recurrenceRule
       });
@@ -429,8 +440,8 @@ export function expandRecurringSchedules(schedule: ScheduleDraft) {
         const nextEnd = new Date(nextStart.getTime() + durationMs);
         occurrences.push({
           ...schedule,
-          startAt: nextStart.toISOString(),
-          endAt: nextEnd.toISOString(),
+          startAt: formatTokyoIso(nextStart),
+          endAt: formatTokyoIso(nextEnd),
           seriesId,
           recurrenceRule
         });
@@ -446,8 +457,8 @@ export function expandRecurringSchedules(schedule: ScheduleDraft) {
       const nextEnd = new Date(nextStart.getTime() + durationMs);
       occurrences.push({
         ...schedule,
-        startAt: nextStart.toISOString(),
-        endAt: nextEnd.toISOString(),
+        startAt: formatTokyoIso(nextStart),
+        endAt: formatTokyoIso(nextEnd),
         seriesId,
         recurrenceRule
       });
