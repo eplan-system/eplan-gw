@@ -1076,14 +1076,21 @@ button, input, select, textarea { font: inherit; }
   .settings-inline-grid { grid-template-columns: 1fr; }
   .settings-action-row { justify-content: flex-start; }
   .topbar {
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 18px;
+  }
+  .surface-card {
+    padding: 10px 12px;
+  }
+  .brand-block {
+    gap: 4px;
   }
   .topbar-title .eyebrow {
     display: none;
   }
   .topbar-title h2 {
-    font-size: 1rem;
+    font-size: 0.92rem;
+    line-height: 1.2;
   }
   .icon-nav { display: none; }
   .icon-nav-item {
@@ -1099,22 +1106,29 @@ button, input, select, textarea { font: inherit; }
     width: 100%;
     display: flex;
     justify-content: flex-end;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
   }
   .runtime-badge {
     display: none;
   }
   .session-chip {
-    padding: 7px 10px;
-    font-size: 0.78rem;
+    padding: 6px 8px;
+    font-size: 0.74rem;
     min-width: 0;
+    border-radius: 14px;
   }
   .session-chip strong,
   .session-chip span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .session-chip span {
+    font-size: 0.64rem;
+  }
+  .session-chip strong {
+    font-size: 0.82rem;
   }
   .ghost-button {
     padding: 8px 12px;
@@ -1124,32 +1138,32 @@ button, input, select, textarea { font: inherit; }
     width: auto;
     min-width: 0;
     flex: 0 0 auto;
-    padding: 7px 14px;
-    font-size: 0.74rem;
+    padding: 6px 10px;
+    font-size: 0.72rem;
   }
   .brand-logo {
-    width: 132px;
+    width: 114px;
   }
   .dashboard-toolbar {
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 6px;
   }
   .dashboard-toolbar h3 {
-    font-size: 0.98rem;
+    font-size: 0.92rem;
     margin: 0;
   }
   .dashboard-toolbar .eyebrow {
-    font-size: 0.68rem;
-    margin-bottom: 3px;
+    display: none;
   }
   .toolbar-group {
     width: 100%;
-    gap: 8px;
+    gap: 6px;
   }
   .compact-filter {
     width: auto;
-    min-width: 116px;
+    min-width: 92px;
     flex: 0 0 auto;
+    padding: 6px 10px;
   }
   .filter-field {
     width: auto;
@@ -1161,14 +1175,17 @@ button, input, select, textarea { font: inherit; }
   }
   .week-switcher {
     justify-content: space-between;
+    gap: 6px;
   }
   .week-label {
     flex: 1;
     text-align: center;
+    padding: 7px 10px;
+    font-size: 0.84rem;
   }
   .small-button {
-    padding: 9px 12px;
-    font-size: 0.84rem;
+    padding: 7px 10px;
+    font-size: 0.8rem;
   }
   .week-grid {
     grid-template-columns: 110px repeat(7, minmax(86px, 1fr));
