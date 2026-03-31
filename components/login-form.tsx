@@ -6,8 +6,8 @@ import { bootstrapFirstAdmin } from "@/lib/data-service";
 
 export function LoginForm() {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState("ito@example.com");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
@@ -20,7 +20,7 @@ export function LoginForm() {
     try {
       await signIn(email, password);
     } catch {
-      setError("ログインに失敗しました。Firebase設定または認証情報を確認してください。");
+      setError("ログインに失敗しました。メールアドレスとパスワードを確認してください。");
     } finally {
       setSubmitting(false);
     }
@@ -31,17 +31,17 @@ export function LoginForm() {
       <div>
         <p className="eyebrow">smart-first groupware</p>
         <h1>社内グループウェア</h1>
-        <p className="muted">スマホでも見やすい予定確認を最優先にしたMVPです。</p>
+        <p className="muted">スマホでも見やすい予定確認を最優先にした運用向けの画面です。</p>
       </div>
 
       <label className="field">
         <span>メールアドレス</span>
-        <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required />
+        <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="name@example.com" required />
       </label>
 
       <label className="field">
         <span>パスワード</span>
-        <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required />
+        <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="パスワードを入力" required />
       </label>
 
       {error ? <p className="error-text">{error}</p> : null}
@@ -66,7 +66,7 @@ export function LoginForm() {
             await bootstrapFirstAdmin(email, password);
             await signIn(email, password);
           } catch {
-            setError("初回管理者の作成に失敗しました。Usersタブでユーザー作成済みか、入力値を確認してください。");
+            setError("初回管理者の作成に失敗しました。入力内容と Firebase 設定を確認してください。");
           } finally {
             setCreating(false);
           }
