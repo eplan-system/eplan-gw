@@ -14,6 +14,10 @@ import {
   expandRecurringSchedules,
   formatDateKey,
   formatDateTime,
+  getJapaneseHolidayName,
+  isHolidayKey,
+  isSaturdayKey,
+  isSundayKey,
   isTodayKey,
   presentSchedule,
   schedulesForUserInMonth,
@@ -90,6 +94,11 @@ export default function SchedulesPage() {
 
     return personalSchedules;
   }, [calendarBase, mode, personalSchedules, weekDays]);
+  const dayToneClass = (dayKey: string) => {
+    if (isHolidayKey(dayKey) || isSundayKey(dayKey)) return "holiday-cell";
+    if (isSaturdayKey(dayKey)) return "saturday-cell";
+    return "";
+  };
 
   function openNewSchedule(userId: string, dayKey: string) {
     setSelectedSchedule(null);
@@ -235,8 +244,13 @@ export default function SchedulesPage() {
               </div>
             </div>
             <div className="month-grid month-header">
-              {["月", "火", "水", "木", "金", "土", "日"].map((label) => (
-                <div key={label} className="month-cell month-cell-header">
+              {["月", "火", "水", "木", "金", "土", "日"].map((label, index) => (
+                <div
+                  key={label}
+                  className={["month-cell", "month-cell-header", index === 5 ? "saturday-cell" : "", index === 6 ? "holiday-cell" : ""]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
                   <strong>{label}</strong>
                 </div>
               ))}
@@ -251,7 +265,14 @@ export default function SchedulesPage() {
                 return (
                   <div
                     key={day.key}
-                    className={["month-cell", "month-cell-interactive", !day.isCurrentMonth ? "month-cell-muted" : "", isTodayKey(day.key) ? "today-cell" : ""]
+                    title={getJapaneseHolidayName(day.key) ?? undefined}
+                    className={[
+                      "month-cell",
+                      "month-cell-interactive",
+                      dayToneClass(day.key),
+                      !day.isCurrentMonth ? "month-cell-muted" : "",
+                      isTodayKey(day.key) ? "today-cell" : ""
+                    ]
                       .filter(Boolean)
                       .join(" ")}
                     onClick={() => openNewSchedule(targetUserId, day.key)}

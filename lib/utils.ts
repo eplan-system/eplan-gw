@@ -34,7 +34,8 @@ export function buildWeekDays(base = new Date()) {
     return {
       key: formatDateKey(date),
       label: WEEKDAY_LABELS[(index + 1) % 7],
-      date: `${date.getMonth() + 1}/${date.getDate()}`
+      date: `${date.getMonth() + 1}/${date.getDate()}`,
+      dayOfWeek: date.getDay()
     };
   });
 }
@@ -66,9 +67,111 @@ export function buildMonthDays(base = new Date()) {
       key: formatDateKey(date),
       label: WEEKDAY_LABELS[date.getDay()],
       day: date.getDate(),
-      isCurrentMonth: date.getMonth() === monthStart.getMonth()
+      isCurrentMonth: date.getMonth() === monthStart.getMonth(),
+      dayOfWeek: date.getDay()
     };
   });
+}
+
+function nthMonday(year: number, month: number, nth: number) {
+  const date = new Date(year, month - 1, 1);
+  const firstDay = date.getDay();
+  const offset = (8 - firstDay) % 7;
+  return 1 + offset + (nth - 1) * 7;
+}
+
+function vernalEquinoxDay(year: number) {
+  return Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+}
+
+function autumnEquinoxDay(year: number) {
+  return Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+}
+
+function holidayKey(year: number, month: number, day: number) {
+  return formatDateKey(new Date(year, month - 1, day));
+}
+
+function buildJapaneseHolidayMap(year: number) {
+  const holidays = new Map<string, string>();
+  const add = (month: number, day: number, name: string) => holidays.set(holidayKey(year, month, day), name);
+
+  add(1, 1, "元日");
+  add(2, 11, "建国記念の日");
+  if (year >= 2020) {
+    add(2, 23, "天皇誕生日");
+  }
+  add(4, 29, "昭和の日");
+  add(5, 3, "憲法記念日");
+  add(5, 4, "みどりの日");
+  add(5, 5, "こどもの日");
+  add(8, 11, "山の日");
+  add(11, 3, "文化の日");
+  add(11, 23, "勤労感謝の日");
+
+  add(1, nthMonday(year, 1, 2), "成人の日");
+  add(7, nthMonday(year, 7, 3), "海の日");
+  add(9, nthMonday(year, 9, 3), "敬老の日");
+  add(10, nthMonday(year, 10, 2), "スポーツの日");
+
+  add(3, vernalEquinoxDay(year), "春分の日");
+  add(9, autumnEquinoxDay(year), "秋分の日");
+
+  const baseEntries = [...holidays.entries()];
+
+  for (const [key, name] of baseEntries) {
+    const date = new Date(`${key}T00:00:00`);
+    if (date.getDay() !== 0) continue;
+
+    const substitute = new Date(date);
+    do {
+      substitute.setDate(substitute.getDate() + 1);
+    } while (holidays.has(formatDateKey(substitute)));
+
+    holidays.set(formatDateKey(substitute), "振替休日");
+  }
+
+  for (let month = 1; month <= 12; month += 1) {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    for (let day = 2; day < daysInMonth; day += 1) {
+      const current = new Date(year, month - 1, day);
+      const currentKey = formatDateKey(current);
+      const prevKey = formatDateKey(new Date(year, month - 1, day - 1));
+      const nextKey = formatDateKey(new Date(year, month - 1, day + 1));
+
+      if (current.getDay() !== 0 && !holidays.has(currentKey) && holidays.has(prevKey) && holidays.has(nextKey)) {
+        holidays.set(currentKey, "国民の休日");
+      }
+    }
+  }
+
+  return holidays;
+}
+
+const holidayCache = new Map<number, Map<string, string>>();
+
+function getHolidayMap(year: number) {
+  if (!holidayCache.has(year)) {
+    holidayCache.set(year, buildJapaneseHolidayMap(year));
+  }
+  return holidayCache.get(year)!;
+}
+
+export function getJapaneseHolidayName(dayKey: string) {
+  const [year] = dayKey.split("-").map(Number);
+  return getHolidayMap(year).get(dayKey) ?? null;
+}
+
+export function isHolidayKey(dayKey: string) {
+  return Boolean(getJapaneseHolidayName(dayKey));
+}
+
+export function isSaturdayKey(dayKey: string) {
+  return new Date(`${dayKey}T00:00:00`).getDay() === 6;
+}
+
+export function isSundayKey(dayKey: string) {
+  return new Date(`${dayKey}T00:00:00`).getDay() === 0;
 }
 
 export function schedulesForUserOnDay(schedules: ScheduleItem[], userId: string, isoDay: string) {

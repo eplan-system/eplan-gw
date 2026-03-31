@@ -1,7 +1,7 @@
 "use client";
 
 import { AppUser, Facility, ScheduleItem } from "@/lib/types";
-import { buildWeekDays, isTodayKey, presentSchedule, schedulesForUserOnDay } from "@/lib/utils";
+import { buildWeekDays, isHolidayKey, isSaturdayKey, isSundayKey, isTodayKey, presentSchedule, schedulesForUserOnDay } from "@/lib/utils";
 
 type Props = {
   users: AppUser[];
@@ -28,6 +28,11 @@ export function WeekBoard({
 }: Props) {
   const weekDays = buildWeekDays(baseDate);
   const visibleUsers = department === "all" ? users : users.filter((user) => user.department === department);
+  const dayToneClass = (dayKey: string) => {
+    if (isHolidayKey(dayKey) || isSundayKey(dayKey)) return "holiday-cell";
+    if (isSaturdayKey(dayKey)) return "saturday-cell";
+    return "";
+  };
 
   return (
     <div className="week-board-card">
@@ -38,7 +43,7 @@ export function WeekBoard({
             <span>区分</span>
           </div>
           {weekDays.map((day) => (
-            <div key={day.key} className={isTodayKey(day.key) ? "day-cell today-cell" : "day-cell"}>
+            <div key={day.key} className={["day-cell", dayToneClass(day.key), isTodayKey(day.key) ? "today-cell" : ""].filter(Boolean).join(" ")}>
               <strong>{day.date}</strong>
               <span>{day.label}</span>
             </div>
@@ -63,7 +68,7 @@ export function WeekBoard({
               return (
                 <div
                   key={`${user.id}-${day.key}`}
-                  className={isTodayKey(day.key) ? "schedule-cell today-cell interactive-cell" : "schedule-cell interactive-cell"}
+                  className={["schedule-cell", "interactive-cell", dayToneClass(day.key), isTodayKey(day.key) ? "today-cell" : ""].filter(Boolean).join(" ")}
                   onClick={() => onAddSchedule(user.id, day.key)}
                   role="button"
                   tabIndex={0}
@@ -142,7 +147,7 @@ export function WeekBoard({
               return (
                 <div
                   key={`${facility.id}-${day.key}`}
-                  className={isTodayKey(day.key) ? "schedule-cell today-cell interactive-cell facility-schedule-cell" : "schedule-cell interactive-cell facility-schedule-cell"}
+                  className={["schedule-cell", "interactive-cell", "facility-schedule-cell", dayToneClass(day.key), isTodayKey(day.key) ? "today-cell" : ""].filter(Boolean).join(" ")}
                   onClick={() => onAddFacilitySchedule?.(facility.id, day.key)}
                   role="button"
                   tabIndex={0}

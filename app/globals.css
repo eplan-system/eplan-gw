@@ -334,6 +334,14 @@ button, input, select, textarea { font: inherit; }
   background: #f4eee4;
   place-items: center;
 }
+.month-cell-header.saturday-cell {
+  background: #edf5ff;
+  color: #2b5ea7;
+}
+.month-cell-header.holiday-cell {
+  background: #fff0f0;
+  color: #b24a4a;
+}
 
 .month-cell-muted {
   opacity: 0.55;
@@ -551,6 +559,14 @@ button, input, select, textarea { font: inherit; }
 }
 
 .corner-cell, .day-cell { min-height: auto; background: #f4eee4; }
+.day-cell.saturday-cell {
+  background: #edf5ff;
+  color: #2b5ea7;
+}
+.day-cell.holiday-cell {
+  background: #fff0f0;
+  color: #b24a4a;
+}
 .sticky-cell {
   position: sticky;
   left: 0;
@@ -569,6 +585,14 @@ button, input, select, textarea { font: inherit; }
 
 .schedule-cell.today-cell {
   box-shadow: inset 0 0 0 1px rgba(11, 118, 97, 0.08);
+}
+.schedule-cell.saturday-cell,
+.month-cell.saturday-cell {
+  background-color: rgba(237, 245, 255, 0.72);
+}
+.schedule-cell.holiday-cell,
+.month-cell.holiday-cell {
+  background-color: rgba(255, 240, 240, 0.72);
 }
 
 .member-cell, .mobile-user-head { display: flex; gap: 10px; align-items: center; }
