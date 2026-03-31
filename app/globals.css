@@ -1085,8 +1085,15 @@ button, input, select, textarea { font: inherit; }
     width: 100%;
     gap: 8px;
   }
-  .compact-filter,
-  .filter-field,
+  .compact-filter {
+    width: auto;
+    min-width: 116px;
+    flex: 0 0 auto;
+  }
+  .filter-field {
+    width: auto;
+    min-width: 116px;
+  }
   .week-switcher,
   .status-badge {
     width: 100%;
