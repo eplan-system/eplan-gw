@@ -10,7 +10,7 @@ const navItems = [
   { href: "/dashboard", label: "トップ", icon: "TOP" },
   { href: "/schedules", label: "スケジュール", icon: "SCH" },
   { href: "/board", label: "掲示板", icon: "BBS" },
-  { href: "/admin", label: "管理", icon: "ADM" }
+  { href: "/admin", label: "表示設定", icon: "ADM" }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
