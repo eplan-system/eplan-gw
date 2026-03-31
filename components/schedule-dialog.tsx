@@ -69,9 +69,9 @@ function splitLocalDateTime(value: string) {
   };
 }
 
-const TIME_OPTIONS = Array.from({ length: 24 * 12 }, (_, index) => {
-  const hour = String(Math.floor(index / 12)).padStart(2, "0");
-  const minute = String((index % 12) * 5).padStart(2, "0");
+const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, index) => {
+  const hour = String(Math.floor(index / 4)).padStart(2, "0");
+  const minute = String((index % 4) * 15).padStart(2, "0");
   return `${hour}:${minute}`;
 });
 
