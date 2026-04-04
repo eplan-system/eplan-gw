@@ -1357,10 +1357,14 @@ button, input, select, textarea { font: inherit; }
   }
   .compact-topbar {
     grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand actions"
+      "nav nav";
     align-items: start;
     gap: 8px;
   }
   .brand-block {
+    grid-area: brand;
     gap: 2px;
     min-width: 0;
   }
@@ -1373,7 +1377,7 @@ button, input, select, textarea { font: inherit; }
   }
   .icon-nav {
     display: flex;
-    grid-column: 1 / -1;
+    grid-area: nav;
     justify-content: flex-start;
     gap: 6px;
     overflow-x: auto;
@@ -1391,12 +1395,15 @@ button, input, select, textarea { font: inherit; }
     font-size: 0.72rem;
   }
   .topbar-actions {
+    grid-area: actions;
     width: auto;
     display: flex;
     justify-content: flex-end;
     gap: 4px;
     align-items: center;
     flex-wrap: nowrap;
+    align-self: start;
+    justify-self: end;
   }
   .runtime-badge {
     display: none;
