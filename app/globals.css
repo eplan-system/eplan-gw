@@ -147,7 +147,7 @@ button, input, select, textarea { font: inherit; }
 
 .compact-topbar {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
 }
@@ -181,8 +181,9 @@ button, input, select, textarea { font: inherit; }
 }
 
 .header-nav {
-  grid-column: 1 / -1;
+  grid-column: auto;
   justify-content: center;
+  min-width: 0;
 }
 
 .icon-nav-item {
@@ -218,6 +219,7 @@ button, input, select, textarea { font: inherit; }
   align-items: center;
   gap: 10px;
   justify-self: end;
+  flex-wrap: nowrap;
 }
 
 .session-chip {
