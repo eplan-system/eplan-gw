@@ -663,6 +663,17 @@ button, input, select, textarea { font: inherit; }
   flex-wrap: wrap;
 }
 
+.toolbar-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.add-schedule-button {
+  flex: 0 0 auto;
+}
+
 .week-label {
   padding: 8px 12px;
   border-radius: 999px;
@@ -1379,6 +1390,12 @@ button, input, select, textarea { font: inherit; }
     width: 100%;
     gap: 6px;
   }
+  .toolbar-controls-row {
+    width: 100%;
+    gap: 6px;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
   .compact-filter {
     width: auto;
     min-width: 92px;
@@ -1389,28 +1406,30 @@ button, input, select, textarea { font: inherit; }
     width: auto;
     min-width: 116px;
   }
-  .week-switcher,
-  .status-badge {
-    width: 100%;
-  }
   .week-switcher {
+    width: auto;
+    flex: 1 1 auto;
     justify-content: flex-start;
     gap: 4px;
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 2px;
+    min-width: 0;
   }
   .week-label {
     flex: 0 0 auto;
     text-align: center;
-    min-width: 108px;
-    padding: 6px 8px;
-    font-size: 0.8rem;
+    min-width: 92px;
+    padding: 6px 6px;
+    font-size: 0.76rem;
   }
   .small-button {
     padding: 6px 8px;
     font-size: 0.76rem;
     white-space: nowrap;
+  }
+  .add-schedule-button {
+    flex: 0 0 auto;
   }
   .week-grid {
     grid-template-columns: 110px repeat(7, minmax(86px, 1fr));

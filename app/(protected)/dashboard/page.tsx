@@ -84,23 +84,25 @@ export default function DashboardPage() {
                 <option value="facilities">設備</option>
               </select>
             </label>
-            <div className="week-switcher">
-              <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, -7))}>
-                前週
-              </button>
-              <button className="small-button" type="button" onClick={() => setWeekBaseDate(new Date())}>
-                今週
-              </button>
-              <span className="week-label">
-                {weekDays[0]?.date} - {weekDays[6]?.date}
-              </span>
-              <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, 7))}>
-                次週
+            <div className="toolbar-controls-row">
+              <div className="week-switcher">
+                <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, -7))}>
+                  前週
+                </button>
+                <button className="small-button" type="button" onClick={() => setWeekBaseDate(new Date())}>
+                  今週
+                </button>
+                <span className="week-label">
+                  {weekDays[0]?.date} - {weekDays[6]?.date}
+                </span>
+                <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, 7))}>
+                  次週
+                </button>
+              </div>
+              <button className="small-button add-schedule-button" type="button" onClick={() => openNewSchedule(draftUserId || user?.id || users[0]?.id || "", draftDate)}>
+                ＋予定追加
               </button>
             </div>
-            <button className="small-button" type="button" onClick={() => openNewSchedule(draftUserId || user?.id || users[0]?.id || "", draftDate)}>
-              ＋予定追加
-            </button>
           </div>
         </div>
 
