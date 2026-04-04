@@ -1294,14 +1294,20 @@ button, input, select, textarea { font: inherit; }
   .surface-card {
     padding: 10px 12px;
   }
+  .compact-topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 8px;
+  }
   .brand-block {
-    gap: 4px;
+    gap: 2px;
+    min-width: 0;
   }
   .topbar-title .eyebrow {
     display: none;
   }
   .topbar-title h2 {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     line-height: 1.2;
   }
   .icon-nav { display: none; }
@@ -1315,20 +1321,22 @@ button, input, select, textarea { font: inherit; }
     font-size: 0.78rem;
   }
   .topbar-actions {
-    width: 100%;
+    width: auto;
     display: flex;
     justify-content: flex-end;
     gap: 4px;
     align-items: center;
+    flex-wrap: nowrap;
   }
   .runtime-badge {
     display: none;
   }
   .session-chip {
-    padding: 6px 8px;
+    padding: 5px 8px;
     font-size: 0.74rem;
     min-width: 0;
-    border-radius: 14px;
+    max-width: 94px;
+    border-radius: 12px;
   }
   .session-chip strong,
   .session-chip span {
@@ -1340,7 +1348,7 @@ button, input, select, textarea { font: inherit; }
     font-size: 0.64rem;
   }
   .session-chip strong {
-    font-size: 0.82rem;
+    font-size: 0.76rem;
   }
   .ghost-button {
     padding: 8px 12px;
@@ -1350,11 +1358,11 @@ button, input, select, textarea { font: inherit; }
     width: auto;
     min-width: 0;
     flex: 0 0 auto;
-    padding: 6px 10px;
-    font-size: 0.72rem;
+    padding: 5px 8px;
+    font-size: 0.7rem;
   }
   .brand-logo {
-    width: 114px;
+    width: 108px;
   }
   .dashboard-toolbar {
     gap: 6px;
