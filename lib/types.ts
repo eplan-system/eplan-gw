@@ -82,6 +82,7 @@ export interface BoardPost {
   body: string;
   authorUserId: string;
   pinned: boolean;
+  category: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -92,4 +93,18 @@ export interface BoardComment {
   body: string;
   authorUserId: string;
   createdAt: string;
+}
+
+export interface FileEntry {
+  id: string;
+  title: string;
+  summary: string;
+  folder: string;
+  fileName: string;
+  fileUrl: string;
+  version: string;
+  updatedByUserId: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
 }

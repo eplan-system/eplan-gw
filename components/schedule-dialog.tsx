@@ -48,6 +48,20 @@ function toIsoFromLocalDateTime(value: string) {
   return `${datePart}T${timePart}:00+09:00`;
 }
 
+function toIsoFromAllDayDate(datePart: string, endOfDay = false) {
+  if (!datePart) {
+    throw new Error("invalid-date");
+  }
+
+  if (!endOfDay) {
+    return `${datePart}T00:00:00+09:00`;
+  }
+
+  const nextDate = new Date(`${datePart}T00:00:00+09:00`);
+  nextDate.setDate(nextDate.getDate() + 1);
+  return `${formatDateKey(nextDate)}T00:00:00+09:00`;
+}
+
 function defaultRange(dateKey: string) {
   return {
     startAt: `${dateKey}T09:00`,
@@ -116,6 +130,7 @@ export function ScheduleDialog({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [allDay, setAllDay] = useState(false);
   const [startDate, setStartDate] = useState(defaults.startAt.slice(0, 10));
   const [startTime, setStartTime] = useState("09:00");
   const [endDate, setEndDate] = useState(defaults.endAt.slice(0, 10));
@@ -126,13 +141,18 @@ export function ScheduleDialog({
 
     if (schedule) {
       const startParts = splitLocalDateTime(toLocalDateTime(schedule.startAt));
-      const endParts = splitLocalDateTime(toLocalDateTime(schedule.endAt));
+      const normalizedEndAt =
+        schedule.allDay
+          ? `${formatDateKey(new Date(new Date(schedule.endAt).getTime() - 1))}T00:00`
+          : toLocalDateTime(schedule.endAt);
+      const endParts = splitLocalDateTime(normalizedEndAt);
       setErrorMessage("");
       setForm({
         id: schedule.id,
         title: schedule.title,
         startAt: `${startParts.datePart}T${startParts.timePart}`,
         endAt: `${endParts.datePart}T${endParts.timePart}`,
+        allDay: schedule.allDay ?? false,
         ownerUserId: currentUserId || schedule.ownerUserId,
         participantUserIds: schedule.participantUserIds,
         facilityIds: schedule.facilityIds ?? [],
@@ -150,6 +170,7 @@ export function ScheduleDialog({
       setRecurrenceCount(schedule.recurrenceRule?.count ?? 10);
       setWeeklyDays(schedule.recurrenceRule?.weeklyDays ?? [new Date(schedule.startAt).getDay()]);
       setShowAdvanced(Boolean(schedule.recurrenceRule || schedule.visibility !== "public"));
+      setAllDay(schedule.allDay ?? false);
       setStartDate(startParts.datePart);
       setStartTime(startParts.timePart);
       setEndDate(endParts.datePart);
@@ -163,6 +184,7 @@ export function ScheduleDialog({
         title: "",
         startAt: `${nextStart.datePart}T${nextStart.timePart}`,
         endAt: `${nextEnd.datePart}T${nextEnd.timePart}`,
+        allDay: false,
         ownerUserId: defaultOwnerUserId,
         participantUserIds: defaultParticipantUserIds,
         facilityIds: normalizedInitialFacilityIds,
@@ -177,6 +199,7 @@ export function ScheduleDialog({
     setWeeklyDays([new Date(`${initialDate}T09:00:00`).getDay()]);
     setShowAdvanced(false);
     setErrorMessage("");
+    setAllDay(false);
     setStartDate(nextStart.datePart);
     setStartTime(nextStart.timePart);
     setEndDate(nextEnd.datePart);
@@ -212,8 +235,8 @@ export function ScheduleDialog({
       const participantIds = form.participantUserIds.length ? form.participantUserIds : fallbackParticipantId ? [fallbackParticipantId] : [];
       const startLocal = `${startDate}T${startTime}`;
       const endLocal = `${endDate}T${endTime}`;
-      const startIso = toIsoFromLocalDateTime(startLocal);
-      const endIso = toIsoFromLocalDateTime(endLocal);
+      const startIso = allDay ? toIsoFromAllDayDate(startDate) : toIsoFromLocalDateTime(startLocal);
+      const endIso = allDay ? toIsoFromAllDayDate(endDate, true) : toIsoFromLocalDateTime(endLocal);
 
       if (new Date(startIso) >= new Date(endIso)) {
         setErrorMessage("終了日時は開始日時より後にしてください。");
@@ -238,6 +261,7 @@ export function ScheduleDialog({
         title: form.title.trim(),
         startAt: startIso,
         endAt: endIso,
+        allDay,
         ownerUserId: nextOwnerId,
         participantUserIds: participantIds,
         facilityIds: form.facilityIds,
@@ -290,10 +314,33 @@ export function ScheduleDialog({
             />
           </label>
 
+          <label className="field field-checkbox">
+            <span>終日</span>
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={allDay}
+                onChange={(event) => {
+                  const nextAllDay = event.target.checked;
+                  setAllDay(nextAllDay);
+                  if (nextAllDay && endDate < startDate) {
+                    setEndDate(startDate);
+                  }
+                  setForm((current) => ({
+                    ...current,
+                    allDay: nextAllDay
+                  }));
+                }}
+              />
+              <span>終日予定として登録する</span>
+            </label>
+          </label>
+
           <label className="field">
             <span>開始時刻</span>
             <select
               value={startTime}
+              disabled={allDay}
               onChange={(event) => {
                 setStartTime(event.target.value);
                 setForm({ ...form, startAt: `${startDate}T${event.target.value}` });
@@ -324,6 +371,7 @@ export function ScheduleDialog({
             <span>終了時刻</span>
             <select
               value={endTime}
+              disabled={allDay}
               onChange={(event) => {
                 setEndTime(event.target.value);
                 setForm({ ...form, endAt: `${endDate}T${event.target.value}` });

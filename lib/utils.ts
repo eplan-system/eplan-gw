@@ -135,7 +135,6 @@ export function scheduleIntersectsDay(schedule: ScheduleItem, dayKey: string) {
   const endDate = new Date(schedule.endAt);
 
   if (
-    !schedule.allDay &&
     tokyoTimeValue(endDate, "hour") === "00" &&
     tokyoTimeValue(endDate, "minute") === "00" &&
     tokyoTimeValue(endDate, "second") === "00" &&
