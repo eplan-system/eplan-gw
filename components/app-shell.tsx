@@ -25,14 +25,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Image src="/e-plan-logo.jpg" alt="e-PLAN" width={180} height={48} className="brand-logo" priority />
             <h2>社内グループウェア</h2>
           </div>
-          <nav className="icon-nav" aria-label="主メニュー">
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className={pathname === item.href ? "icon-nav-item active" : "icon-nav-item"}>
-                <span className="icon-badge">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </nav>
           <div className="topbar-actions">
             <RuntimeBadge />
             <div className="session-chip">
@@ -43,17 +35,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ログアウト
             </button>
           </div>
+          <nav className="icon-nav header-nav" aria-label="主メニュー">
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href} className={pathname === item.href ? "icon-nav-item active" : "icon-nav-item"}>
+                <span className="icon-badge">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
         </header>
         <main>{children}</main>
-        <nav className="mobile-bottom-nav" aria-label="スマホメニュー">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className={pathname === item.href ? "mobile-bottom-item active" : "mobile-bottom-item"}>
-              <span className="mobile-bottom-icon">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className="mobile-bottom-spacer" />
       </div>
     </div>
   );

@@ -147,7 +147,7 @@ button, input, select, textarea { font: inherit; }
 
 .compact-topbar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 12px;
 }
@@ -177,6 +177,11 @@ button, input, select, textarea { font: inherit; }
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
+  justify-content: center;
+}
+
+.header-nav {
+  grid-column: 1 / -1;
   justify-content: center;
 }
 
@@ -213,11 +218,6 @@ button, input, select, textarea { font: inherit; }
   align-items: center;
   gap: 10px;
   justify-self: end;
-}
-
-.mobile-bottom-nav,
-.mobile-bottom-spacer {
-  display: none;
 }
 
 .session-chip {
@@ -1321,15 +1321,24 @@ button, input, select, textarea { font: inherit; }
     font-size: 0.88rem;
     line-height: 1.2;
   }
-  .icon-nav { display: none; }
+  .icon-nav {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-top: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
   .icon-nav-item {
-    min-width: 72px;
-    padding: 8px 8px 10px;
+    min-width: 64px;
+    padding: 6px 6px 8px;
     gap: 4px;
     flex: 0 0 auto;
   }
   .icon-nav-item span:last-child {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
   }
   .topbar-actions {
     width: auto;
@@ -1560,53 +1569,6 @@ button, input, select, textarea { font: inherit; }
     color: var(--muted);
     font-size: 0.82rem;
     font-weight: 700;
-  }
-  .mobile-bottom-nav {
-    position: fixed;
-    left: 10px;
-    right: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 6px;
-    padding: 8px;
-    background: rgba(255, 253, 248, 0.96);
-    backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.82);
-    box-shadow: var(--shadow);
-    border-radius: 20px;
-    z-index: 30;
-  }
-  .mobile-bottom-item {
-    display: grid;
-    justify-items: center;
-    gap: 4px;
-    padding: 6px 4px;
-    color: var(--muted);
-    font-size: 0.72rem;
-  }
-  .mobile-bottom-item.active {
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .mobile-bottom-icon {
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    background: #f4eee4;
-    font-size: 0.68rem;
-    font-weight: 700;
-  }
-  .mobile-bottom-item.active .mobile-bottom-icon {
-    background: rgba(11, 118, 97, 0.1);
-    border-color: rgba(11, 118, 97, 0.25);
-  }
-  .mobile-bottom-spacer {
-    display: block;
-    height: 86px;
   }
   .detail-layout {
     grid-template-columns: 1fr;
