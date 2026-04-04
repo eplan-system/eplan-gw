@@ -784,18 +784,17 @@ button, input, select, textarea { font: inherit; }
 .facility-dot { background: #9b7b47; }
 .schedule-cell { display: grid; gap: 8px; align-content: start; }
 .week-row-stack { display: grid; }
-.period-grid { position: relative; }
-.period-stub-cell {
-  min-height: 0;
-  padding: 0;
-  border-bottom: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.period-grid-body {
-  grid-column: 2 / span 7;
+.person-week-grid {
   display: grid;
-  gap: 2px;
+  grid-template-columns: 180px repeat(7, minmax(116px, 1fr));
+}
+.member-cell-span {
+  align-self: stretch;
+  min-height: 100%;
+}
+.period-grid-body-inline {
+  display: grid;
+  align-content: center;
   padding: 0 0 6px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -1581,6 +1580,10 @@ button, input, select, textarea { font: inherit; }
     flex: 0 0 auto;
   }
   .week-grid {
+    grid-template-columns: 110px repeat(7, minmax(86px, 1fr));
+    min-width: 720px;
+  }
+  .person-week-grid {
     grid-template-columns: 110px repeat(7, minmax(86px, 1fr));
     min-width: 720px;
   }

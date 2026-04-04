@@ -95,84 +95,91 @@ type RowProps = {
 };
 
 function BoardRow({ label, weekDays, weekKeys, currentUserId, normalSchedulesByDay, periodRows, onAdd, onOpenSchedule }: RowProps) {
+  const rowCount = 1 + periodRows.length;
+
   return (
-    <div className="week-row-stack">
-      <div className="week-grid">
-        <div className="sticky-cell member-cell">{label}</div>
-
-        {weekDays.map((day) => {
-          const daySchedules = normalSchedulesByDay(day.key)
-            .filter((schedule) => getScheduleType(schedule) !== "period")
-            .filter((schedule) => presentSchedule(schedule, currentUserId))
-            .sort((left, right) => left.startAt.localeCompare(right.startAt));
-
-          return (
-            <div
-              key={day.key}
-              className={["schedule-cell", "interactive-cell", dayToneClass(day.key), isTodayKey(day.key) ? "today-cell" : ""].filter(Boolean).join(" ")}
-              onClick={() => onAdd(day.key)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onAdd(day.key);
-                }
-              }}
-            >
-              {daySchedules.length ? (
-                <>
-                  {daySchedules.map((schedule) => {
-                    const visible = presentSchedule(schedule, currentUserId);
-                    if (!visible) return null;
-
-                    return (
-                      <button
-                        key={schedule.id}
-                        className="schedule-chip schedule-button"
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onOpenSchedule(schedule);
-                        }}
-                      >
-                        <strong>{visible.title}</strong>
-                        <span>{formatScheduleTimeLabel(schedule)}</span>
-                        {schedule.facilityIds?.length ? <small>設備 {schedule.facilityIds.length}件</small> : null}
-                      </button>
-                    );
-                  })}
-                  <button
-                    className="add-cell-button"
-                    type="button"
-                    aria-label="予定を追加"
-                    title="予定を追加"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onAdd(day.key);
-                    }}
-                  >
-                    +
-                  </button>
-                </>
-              ) : (
-                <div className="cell-placeholder cell-placeholder-minimal" aria-hidden="true">
-                  +
-                </div>
-              )}
-            </div>
-          );
-        })}
+    <div
+      className="person-week-grid"
+      style={{
+        gridTemplateRows: `minmax(92px, auto)${periodRows.length ? ` repeat(${periodRows.length}, minmax(30px, auto))` : ""}`
+      }}
+    >
+      <div className="sticky-cell member-cell member-cell-span" style={{ gridRow: `1 / span ${rowCount}` }}>
+        {label}
       </div>
 
-      {periodRows.length ? (
-        <div className="week-grid period-grid">
-          <div className="sticky-cell period-stub-cell" aria-hidden="true" />
-          <div className="period-grid-body">
-            <PeriodLaneRows rows={periodRows} weekKeys={weekKeys} currentUserId={currentUserId} onOpenSchedule={onOpenSchedule} />
+      {weekDays.map((day, dayIndex) => {
+        const daySchedules = normalSchedulesByDay(day.key)
+          .filter((schedule) => getScheduleType(schedule) !== "period")
+          .filter((schedule) => presentSchedule(schedule, currentUserId))
+          .sort((left, right) => left.startAt.localeCompare(right.startAt));
+
+        return (
+          <div
+            key={day.key}
+            style={{ gridColumn: dayIndex + 2, gridRow: 1 }}
+            className={["schedule-cell", "interactive-cell", dayToneClass(day.key), isTodayKey(day.key) ? "today-cell" : ""].filter(Boolean).join(" ")}
+            onClick={() => onAdd(day.key)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onAdd(day.key);
+              }
+            }}
+          >
+            {daySchedules.length ? (
+              <>
+                {daySchedules.map((schedule) => {
+                  const visible = presentSchedule(schedule, currentUserId);
+                  if (!visible) return null;
+
+                  return (
+                    <button
+                      key={schedule.id}
+                      className="schedule-chip schedule-button"
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onOpenSchedule(schedule);
+                      }}
+                    >
+                      <strong>{visible.title}</strong>
+                      <span>{formatScheduleTimeLabel(schedule)}</span>
+                      {schedule.facilityIds?.length ? <small>設備 {schedule.facilityIds.length}件</small> : null}
+                    </button>
+                  );
+                })}
+                <button
+                  className="add-cell-button"
+                  type="button"
+                  aria-label="予定を追加"
+                  title="予定を追加"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onAdd(day.key);
+                  }}
+                >
+                  +
+                </button>
+              </>
+            ) : (
+              <div className="cell-placeholder cell-placeholder-minimal" aria-hidden="true">
+                +
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {periodRows.map((row, rowIndex) => (
+        <div key={rowIndex} className="period-grid-body-inline" style={{ gridColumn: "2 / span 7", gridRow: rowIndex + 2 }}>
+          <div className="period-lane-stack">
+            <PeriodLaneRows rows={[row]} weekKeys={weekKeys} currentUserId={currentUserId} onOpenSchedule={onOpenSchedule} />
           </div>
         </div>
-      ) : null}
+      ))}
     </div>
   );
 }
