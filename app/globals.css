@@ -961,6 +961,8 @@ button, input, select, textarea { font: inherit; }
   place-items: center;
   padding: 20px;
   z-index: 50;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .dialog-card {
@@ -1290,6 +1292,11 @@ button, input, select, textarea { font: inherit; }
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fffdf9;
+  padding-bottom: 10px;
 }
 
 .dialog-actions {
@@ -1617,20 +1624,26 @@ button, input, select, textarea { font: inherit; }
     grid-template-columns: 1fr;
   }
   .dialog-backdrop {
-    align-items: end;
-    padding: 10px;
+    align-items: start;
+    place-items: start stretch;
+    padding: max(10px, env(safe-area-inset-top)) 10px 10px;
   }
   .dialog-card {
     width: 100%;
-    max-height: calc(100vh - 12px);
-    border-radius: 22px 22px 0 0;
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top)));
+    border-radius: 22px;
     padding: 14px;
+    margin-top: 0;
   }
   .dialog-card-simple {
     padding-bottom: 26px;
   }
   .dialog-head {
     margin-bottom: 12px;
+    top: -14px;
+    margin-inline: -14px;
+    padding: 14px 14px 10px;
+    border-radius: 22px 22px 0 0;
   }
   .dialog-head h3 {
     margin: 0;
