@@ -7,10 +7,11 @@ import { useAuth } from "@/components/auth-provider";
 import { RuntimeBadge } from "@/components/runtime-badge";
 
 const navItems = [
-  { href: "/dashboard", label: "トップ", icon: "TOP" },
-  { href: "/schedules", label: "スケジュール", icon: "SCH" },
+  { href: "/dashboard", label: "入口", icon: "TOP" },
   { href: "/board", label: "掲示板", icon: "BBS" },
-  { href: "/admin", label: "表示設定", icon: "ADM" }
+  { href: "/files", label: "ファイル", icon: "FIL" },
+  { href: "/schedules", label: "予定", icon: "SCH" },
+  { href: "/admin", label: "管理", icon: "ADM" }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -23,7 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="topbar compact-topbar">
           <div className="topbar-title brand-block">
             <Image src="/e-plan-logo.jpg" alt="e-PLAN" width={180} height={48} className="brand-logo" priority />
-            <h2>社内グループウェア</h2>
+            <h2>社内ポータル</h2>
           </div>
           <nav className="icon-nav" aria-label="主メニュー">
             {navItems.map((item) => (
@@ -45,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main>{children}</main>
-        <nav className="mobile-bottom-nav" aria-label="スマホメニュー">
+        <nav className="mobile-bottom-nav" aria-label="主メニュー">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} className={pathname === item.href ? "mobile-bottom-item active" : "mobile-bottom-item"}>
               <span className="mobile-bottom-icon">{item.icon}</span>
