@@ -36,6 +36,7 @@ type Props = {
 };
 
 type RecurrenceEndMode = "until" | "count" | "never";
+type ScheduleMode = "normal" | "period";
 
 const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, index) => {
   const hour = String(Math.floor(index / 4)).padStart(2, "0");
@@ -70,24 +71,14 @@ function toLocalDateTime(value: string) {
 }
 
 function toIsoFromLocalDateTime(datePart: string, timePart: string) {
-  if (!datePart || !timePart) {
-    throw new Error("invalid-datetime");
-  }
-
   return `${datePart}T${timePart}:00+09:00`;
 }
 
 function toIsoFromDayStart(datePart: string) {
-  if (!datePart) {
-    throw new Error("invalid-date");
-  }
   return `${datePart}T00:00:00+09:00`;
 }
 
 function toIsoFromNextDayStart(datePart: string) {
-  if (!datePart) {
-    throw new Error("invalid-date");
-  }
   const date = new Date(`${datePart}T00:00:00+09:00`);
   date.setDate(date.getDate() + 1);
   return `${formatDateKey(date)}T00:00:00+09:00`;
@@ -102,17 +93,25 @@ function addHoursToLocalDateTime(datePart: string, timePart: string, hours: numb
   };
 }
 
-function inferScheduleType(schedule: ScheduleItem | null): ScheduleType {
-  if (!schedule) return "normal";
-  return getScheduleType(schedule);
-}
-
 function buildVisibilityOptions(): { value: ScheduleVisibility; label: string }[] {
   return [
     { value: "public", label: "通常表示" },
     { value: "busy", label: "予定ありのみ" },
     { value: "private", label: "完全非表示" }
   ];
+}
+
+function inferModeAndAllDay(schedule: ScheduleItem | null) {
+  if (!schedule) {
+    return { mode: "normal" as ScheduleMode, allDay: false };
+  }
+
+  const type = getScheduleType(schedule);
+  if (type === "period") {
+    return { mode: "period" as ScheduleMode, allDay: false };
+  }
+
+  return { mode: "normal" as ScheduleMode, allDay: type === "allDay" };
 }
 
 export function ScheduleDialog({
@@ -149,7 +148,8 @@ export function ScheduleDialog({
     memo: "",
     visibility: "public"
   });
-  const [scheduleType, setScheduleType] = useState<ScheduleType>("normal");
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("normal");
+  const [allDay, setAllDay] = useState(false);
   const [recurrenceFrequency, setRecurrenceFrequency] = useState<RecurrenceFrequency>("none");
   const [recurrenceInterval, setRecurrenceInterval] = useState(1);
   const [recurrenceUntil, setRecurrenceUntil] = useState(defaultUntil(initialDate));
@@ -169,21 +169,21 @@ export function ScheduleDialog({
     if (!open) return;
 
     if (schedule) {
-      const nextType = inferScheduleType(schedule);
+      const { mode, allDay: nextAllDay } = inferModeAndAllDay(schedule);
       const startParts = splitLocalDateTime(toLocalDateTime(schedule.startAt));
-      const endLocal =
-        nextType === "normal"
-          ? toLocalDateTime(schedule.endAt)
-          : `${formatDateKey(new Date(new Date(schedule.endAt).getTime() - 1))}T00:00`;
-      const endParts = splitLocalDateTime(endLocal);
+      const displayEndDate =
+        getScheduleType(schedule) === "normal"
+          ? localDateKeyFromIso(schedule.endAt)
+          : formatDateKey(new Date(new Date(schedule.endAt).getTime() - 1));
+      const endDisplayTime = getScheduleType(schedule) === "normal" ? TOKYO_TIME_FORMATTER.format(new Date(schedule.endAt)) : "00:00";
 
       setForm({
         id: schedule.id,
         title: schedule.title,
         startAt: `${startParts.datePart}T${startParts.timePart}`,
-        endAt: `${endParts.datePart}T${endParts.timePart}`,
-        allDay: nextType !== "normal",
-        scheduleType: nextType,
+        endAt: `${displayEndDate}T${endDisplayTime}`,
+        allDay: nextAllDay,
+        scheduleType: getScheduleType(schedule),
         ownerUserId: currentUserId || schedule.ownerUserId,
         participantUserIds: schedule.participantUserIds,
         facilityIds: schedule.facilityIds ?? [],
@@ -192,7 +192,8 @@ export function ScheduleDialog({
         seriesId: schedule.seriesId,
         recurrenceRule: schedule.recurrenceRule ?? null
       });
-      setScheduleType(nextType);
+      setScheduleMode(mode);
+      setAllDay(nextAllDay);
       setRecurrenceFrequency(schedule.recurrenceRule?.frequency ?? "none");
       setRecurrenceInterval(schedule.recurrenceRule?.interval ?? 1);
       setRecurrenceUntil(schedule.recurrenceRule?.until ?? startParts.datePart);
@@ -205,8 +206,8 @@ export function ScheduleDialog({
       setAutoAdjustEnd(false);
       setStartDate(startParts.datePart);
       setStartTime(startParts.timePart);
-      setEndDate(endParts.datePart);
-      setEndTime(endParts.timePart);
+      setEndDate(displayEndDate);
+      setEndTime(endDisplayTime);
       setErrorMessage("");
       return;
     }
@@ -225,7 +226,8 @@ export function ScheduleDialog({
       memo: "",
       visibility: "public"
     });
-    setScheduleType("normal");
+    setScheduleMode("normal");
+    setAllDay(false);
     setRecurrenceFrequency("none");
     setRecurrenceInterval(1);
     setRecurrenceUntil(defaultUntil(initialDate));
@@ -264,29 +266,16 @@ export function ScheduleDialog({
     }));
   }
 
-  function applyScheduleType(nextType: ScheduleType) {
-    setScheduleType(nextType);
-    setForm((current) => ({
-      ...current,
-      scheduleType: nextType,
-      allDay: nextType !== "normal"
-    }));
-
-    if (nextType === "normal") {
-      if (!schedule) {
-        const nextEnd = addHoursToLocalDateTime(startDate, startTime, 1);
-        setEndDate(nextEnd.datePart);
-        setEndTime(nextEnd.timePart);
-        setAutoAdjustEnd(true);
+  function applyScheduleMode(nextMode: ScheduleMode) {
+    setScheduleMode(nextMode);
+    if (nextMode === "period") {
+      setAllDay(false);
+      setAutoAdjustEnd(false);
+      if (endDate < startDate) {
+        setEndDate(startDate);
       }
-      return;
-    }
-
-    setAutoAdjustEnd(false);
-    if (nextType === "allDay") {
-      setEndDate(startDate);
-    } else if (endDate < startDate) {
-      setEndDate(startDate);
+    } else if (!schedule) {
+      setAutoAdjustEnd(true);
     }
   }
 
@@ -300,22 +289,24 @@ export function ScheduleDialog({
       const fallbackParticipantId = initialUserId || nextOwnerId;
       const participantIds = form.participantUserIds.length ? form.participantUserIds : fallbackParticipantId ? [fallbackParticipantId] : [];
 
+      const effectiveType: ScheduleType = scheduleMode === "period" ? "period" : allDay ? "allDay" : "normal";
+
       let startIso = "";
       let endIso = "";
 
-      if (scheduleType === "normal") {
+      if (effectiveType === "normal") {
         startIso = toIsoFromLocalDateTime(startDate, startTime);
         endIso = toIsoFromLocalDateTime(endDate, endTime);
-      } else if (scheduleType === "allDay") {
+      } else if (effectiveType === "allDay") {
         startIso = toIsoFromDayStart(startDate);
-        endIso = toIsoFromNextDayStart(startDate);
+        endIso = toIsoFromNextDayStart(endDate);
       } else {
         startIso = toIsoFromDayStart(startDate);
         endIso = toIsoFromNextDayStart(endDate);
       }
 
       if (new Date(startIso) >= new Date(endIso)) {
-        setErrorMessage("終了日時は開始日時より後にしてください。");
+        setErrorMessage("終了は開始より後にしてください。");
         setSaving(false);
         return;
       }
@@ -337,8 +328,8 @@ export function ScheduleDialog({
         title: form.title.trim(),
         startAt: startIso,
         endAt: endIso,
-        allDay: scheduleType !== "normal",
-        scheduleType,
+        allDay: effectiveType !== "normal",
+        scheduleType: effectiveType,
         ownerUserId: nextOwnerId,
         participantUserIds: participantIds,
         facilityIds: form.facilityIds,
@@ -382,15 +373,14 @@ export function ScheduleDialog({
             <span>予定種別</span>
             <div className="schedule-type-toggle">
               {[
-                { value: "normal" as const, label: "通常" },
-                { value: "allDay" as const, label: "終日" },
-                { value: "period" as const, label: "期間" }
+                { value: "normal" as const, label: "通常予定" },
+                { value: "period" as const, label: "期間予定" }
               ].map((item) => (
                 <button
                   key={item.value}
                   type="button"
-                  className={scheduleType === item.value ? "tab-button active" : "tab-button"}
-                  onClick={() => applyScheduleType(item.value)}
+                  className={scheduleMode === item.value ? "tab-button active" : "tab-button"}
+                  onClick={() => applyScheduleMode(item.value)}
                 >
                   {item.label}
                 </button>
@@ -398,9 +388,9 @@ export function ScheduleDialog({
             </div>
           </div>
 
-          <div className={scheduleType === "allDay" ? "full schedule-date-grid single" : "full schedule-date-grid"}>
+          <div className="full schedule-date-grid">
             <label className="field">
-              <span>{scheduleType === "period" ? "開始日" : "日付"}</span>
+              <span>{scheduleMode === "period" ? "開始日" : "開始日"}</span>
               <input
                 type="date"
                 value={startDate}
@@ -408,13 +398,11 @@ export function ScheduleDialog({
                   const nextStartDate = event.target.value;
                   setStartDate(nextStartDate);
 
-                  if (scheduleType === "allDay") {
-                    setEndDate(nextStartDate);
-                  } else if (scheduleType === "period" && endDate < nextStartDate) {
+                  if (endDate < nextStartDate) {
                     setEndDate(nextStartDate);
                   }
 
-                  if (scheduleType === "normal" && !schedule && autoAdjustEnd) {
+                  if (scheduleMode === "normal" && !schedule && autoAdjustEnd && !allDay) {
                     syncEndWithStart(nextStartDate, startTime);
                     return;
                   }
@@ -425,35 +413,34 @@ export function ScheduleDialog({
               />
             </label>
 
-            {scheduleType === "period" ? (
-              <label className="field">
-                <span>終了日</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  min={startDate}
-                  onChange={(event) => {
-                    const nextEndDate = event.target.value;
-                    setEndDate(nextEndDate);
-                    setAutoAdjustEnd(false);
-                    setForm((current) => ({ ...current, endAt: `${nextEndDate}T${endTime}` }));
-                  }}
-                  required
-                />
-              </label>
-            ) : null}
+            <label className="field">
+              <span>終了日</span>
+              <input
+                type="date"
+                value={endDate}
+                min={startDate}
+                onChange={(event) => {
+                  const nextEndDate = event.target.value;
+                  setEndDate(nextEndDate);
+                  setAutoAdjustEnd(false);
+                  setForm((current) => ({ ...current, endAt: `${nextEndDate}T${endTime}` }));
+                }}
+                required
+              />
+            </label>
           </div>
 
-          {scheduleType === "normal" ? (
-            <div className="full schedule-time-grid two-up">
+          {scheduleMode === "normal" ? (
+            <div className={allDay ? "full schedule-time-grid is-disabled" : "full schedule-time-grid"}>
               <label className="field">
                 <span>開始時刻</span>
                 <select
                   value={startTime}
+                  disabled={allDay}
                   onChange={(event) => {
                     const nextStartTime = event.target.value;
                     setStartTime(nextStartTime);
-                    if (!schedule && autoAdjustEnd) {
+                    if (!schedule && autoAdjustEnd && !allDay) {
                       syncEndWithStart(startDate, nextStartTime);
                       return;
                     }
@@ -472,6 +459,7 @@ export function ScheduleDialog({
                 <span>終了時刻</span>
                 <select
                   value={endTime}
+                  disabled={allDay}
                   onChange={(event) => {
                     const nextEndTime = event.target.value;
                     setAutoAdjustEnd(false);
@@ -485,6 +473,32 @@ export function ScheduleDialog({
                     </option>
                   ))}
                 </select>
+              </label>
+
+              <label className="field schedule-all-day-inline">
+                <span className="visually-hidden">終日</span>
+                <div className="checkbox-row schedule-all-day-toggle">
+                  <input
+                    type="checkbox"
+                    checked={allDay}
+                    onChange={(event) => {
+                      const nextAllDay = event.target.checked;
+                      setAllDay(nextAllDay);
+                      if (nextAllDay) {
+                        setAutoAdjustEnd(false);
+                        if (endDate < startDate) {
+                          setEndDate(startDate);
+                        }
+                      } else if (!schedule) {
+                        setAutoAdjustEnd(true);
+                        const nextEnd = addHoursToLocalDateTime(startDate, startTime, 1);
+                        setEndDate(nextEnd.datePart);
+                        setEndTime(nextEnd.timePart);
+                      }
+                    }}
+                  />
+                  <span>終日</span>
+                </div>
               </label>
             </div>
           ) : null}

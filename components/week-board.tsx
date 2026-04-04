@@ -43,6 +43,7 @@ function buildPeriodChipClass(segment: PeriodSegment, weekKeys: string[]) {
 
   if (segment.startColumn > 0 || startKey < weekKeys[0]) classes.push("continued-left");
   if (segment.endColumn < weekKeys.length - 1 || endKey > weekKeys[weekKeys.length - 1]) classes.push("continued-right");
+
   return classes.join(" ");
 }
 
@@ -73,12 +74,105 @@ function PeriodLaneRows({ rows, weekKeys, currentUserId, onOpenSchedule }: Perio
                 onClick={() => onOpenSchedule(segment.schedule)}
               >
                 <strong>{visible.title}</strong>
-                <span>{formatScheduleTimeLabel(segment.schedule)}</span>
               </button>
             );
           })}
         </div>
       ))}
+    </div>
+  );
+}
+
+type RowProps = {
+  label: React.ReactNode;
+  weekDays: ReturnType<typeof buildWeekDays>;
+  weekKeys: string[];
+  currentUserId?: string;
+  normalSchedulesByDay: (dayKey: string) => ScheduleItem[];
+  periodRows: PeriodSegment[][];
+  onAdd: (dayKey: string) => void;
+  onOpenSchedule: (schedule: ScheduleItem) => void;
+};
+
+function BoardRow({ label, weekDays, weekKeys, currentUserId, normalSchedulesByDay, periodRows, onAdd, onOpenSchedule }: RowProps) {
+  return (
+    <div className="week-row-stack">
+      <div className="week-grid">
+        <div className="sticky-cell member-cell">{label}</div>
+
+        {weekDays.map((day) => {
+          const daySchedules = normalSchedulesByDay(day.key)
+            .filter((schedule) => getScheduleType(schedule) !== "period")
+            .filter((schedule) => presentSchedule(schedule, currentUserId))
+            .sort((left, right) => left.startAt.localeCompare(right.startAt));
+
+          return (
+            <div
+              key={day.key}
+              className={["schedule-cell", "interactive-cell", dayToneClass(day.key), isTodayKey(day.key) ? "today-cell" : ""].filter(Boolean).join(" ")}
+              onClick={() => onAdd(day.key)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onAdd(day.key);
+                }
+              }}
+            >
+              {daySchedules.length ? (
+                <>
+                  {daySchedules.map((schedule) => {
+                    const visible = presentSchedule(schedule, currentUserId);
+                    if (!visible) return null;
+
+                    return (
+                      <button
+                        key={schedule.id}
+                        className="schedule-chip schedule-button"
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onOpenSchedule(schedule);
+                        }}
+                      >
+                        <strong>{visible.title}</strong>
+                        <span>{formatScheduleTimeLabel(schedule)}</span>
+                        {schedule.facilityIds?.length ? <small>設備 {schedule.facilityIds.length}件</small> : null}
+                      </button>
+                    );
+                  })}
+                  <button
+                    className="add-cell-button"
+                    type="button"
+                    aria-label="予定を追加"
+                    title="予定を追加"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onAdd(day.key);
+                    }}
+                  >
+                    +
+                  </button>
+                </>
+              ) : (
+                <div className="cell-placeholder cell-placeholder-minimal" aria-hidden="true">
+                  +
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {periodRows.length ? (
+        <div className="week-grid period-grid">
+          <div className="sticky-cell period-stub-cell" aria-hidden="true" />
+          <div className="period-grid-body">
+            <PeriodLaneRows rows={periodRows} weekKeys={weekKeys} currentUserId={currentUserId} onOpenSchedule={onOpenSchedule} />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -124,93 +218,26 @@ export function WeekBoard({
           const periodRows = buildPeriodRows(userSchedules, weekKeys);
 
           return (
-            <div key={user.id} className="week-row-stack">
-              <div className="week-grid">
-                <div className="sticky-cell member-cell">
+            <BoardRow
+              key={user.id}
+              label={
+                <>
                   <div className="avatar-dot" style={{ background: user.color }} />
                   <div className="member-meta-block">
                     <strong>{user.name}</strong>
                     <span>{user.department || "部署未設定"}</span>
                     {!user.department || !user.mobile ? <small className="member-warning">プロフィール未設定</small> : null}
                   </div>
-                </div>
-
-                {weekDays.map((day) => {
-                  const daySchedules = schedulesForUserOnDay(schedules, user.id, day.key)
-                    .filter((schedule) => getScheduleType(schedule) !== "period")
-                    .filter((schedule) => presentSchedule(schedule, currentUserId))
-                    .sort((left, right) => left.startAt.localeCompare(right.startAt));
-
-                  return (
-                    <div
-                      key={`${user.id}-${day.key}`}
-                      className={["schedule-cell", "interactive-cell", dayToneClass(day.key), isTodayKey(day.key) ? "today-cell" : ""].filter(Boolean).join(" ")}
-                      onClick={() => onAddSchedule(user.id, day.key)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          onAddSchedule(user.id, day.key);
-                        }
-                      }}
-                    >
-                      {daySchedules.length ? (
-                        <>
-                          {daySchedules.map((schedule) => {
-                            const visible = presentSchedule(schedule, currentUserId);
-                            if (!visible) return null;
-
-                            return (
-                              <button
-                                key={schedule.id}
-                                className="schedule-chip schedule-button"
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  onOpenSchedule(schedule);
-                                }}
-                              >
-                                <strong>{visible.title}</strong>
-                                <span>{formatScheduleTimeLabel(schedule)}</span>
-                                {schedule.facilityIds?.length ? <small>設備 {schedule.facilityIds.length}件</small> : null}
-                              </button>
-                            );
-                          })}
-                          <button
-                            className="add-cell-button"
-                            type="button"
-                            aria-label="予定を追加"
-                            title="予定を追加"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onAddSchedule(user.id, day.key);
-                            }}
-                          >
-                            +
-                          </button>
-                        </>
-                      ) : (
-                        <div className="cell-placeholder cell-placeholder-minimal" aria-hidden="true">
-                          +
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {periodRows.length ? (
-                <div className="week-grid period-grid">
-                  <div className="sticky-cell period-label-cell">
-                    <span>期間予定</span>
-                  </div>
-                  <div className="period-grid-body">
-                    <PeriodLaneRows rows={periodRows} weekKeys={weekKeys} currentUserId={currentUserId} onOpenSchedule={onOpenSchedule} />
-                  </div>
-                </div>
-              ) : null}
-            </div>
+                </>
+              }
+              weekDays={weekDays}
+              weekKeys={weekKeys}
+              currentUserId={currentUserId}
+              normalSchedulesByDay={(dayKey) => schedulesForUserOnDay(schedules, user.id, dayKey)}
+              periodRows={periodRows}
+              onAdd={(dayKey) => onAddSchedule(user.id, dayKey)}
+              onOpenSchedule={onOpenSchedule}
+            />
           );
         })}
 
@@ -221,94 +248,29 @@ export function WeekBoard({
           const periodRows = buildPeriodRows(facilitySchedules, weekKeys);
 
           return (
-            <div key={facility.id} className="week-row-stack">
-              <div className="week-grid">
-                <div className="sticky-cell member-cell facility-cell-head">
+            <BoardRow
+              key={facility.id}
+              label={
+                <>
                   <div className="avatar-dot facility-dot" />
                   <div className="member-meta-block">
                     <strong>{facility.name}</strong>
                     <span>設備</span>
                   </div>
-                </div>
-
-                {weekDays.map((day) => {
-                  const daySchedules = facilitySchedules
-                    .filter((schedule) => scheduleIntersectsDay(schedule, day.key))
-                    .filter((schedule) => getScheduleType(schedule) !== "period")
-                    .filter((schedule) => presentSchedule(schedule, currentUserId))
-                    .sort((left, right) => left.startAt.localeCompare(right.startAt));
-
-                  return (
-                    <div
-                      key={`${facility.id}-${day.key}`}
-                      className={["schedule-cell", "interactive-cell", "facility-schedule-cell", dayToneClass(day.key), isTodayKey(day.key) ? "today-cell" : ""]
-                        .filter(Boolean)
-                        .join(" ")}
-                      onClick={() => onAddFacilitySchedule?.(facility.id, day.key)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(event) => {
-                        if ((event.key === "Enter" || event.key === " ") && onAddFacilitySchedule) {
-                          event.preventDefault();
-                          onAddFacilitySchedule(facility.id, day.key);
-                        }
-                      }}
-                    >
-                      {daySchedules.length ? (
-                        <>
-                          {daySchedules.map((schedule) => {
-                            const visible = presentSchedule(schedule, currentUserId);
-                            if (!visible) return null;
-
-                            return (
-                              <button
-                                key={schedule.id}
-                                className="schedule-chip schedule-button facility-chip"
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  onOpenSchedule(schedule);
-                                }}
-                              >
-                                <strong>{visible.title}</strong>
-                                <span>{formatScheduleTimeLabel(schedule)}</span>
-                              </button>
-                            );
-                          })}
-                          <button
-                            className="add-cell-button"
-                            type="button"
-                            aria-label="設備予定を追加"
-                            title="設備予定を追加"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onAddFacilitySchedule?.(facility.id, day.key);
-                            }}
-                          >
-                            +
-                          </button>
-                        </>
-                      ) : (
-                        <div className="cell-placeholder cell-placeholder-minimal" aria-hidden="true">
-                          +
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {periodRows.length ? (
-                <div className="week-grid period-grid">
-                  <div className="sticky-cell period-label-cell facility-cell-head">
-                    <span>期間予定</span>
-                  </div>
-                  <div className="period-grid-body">
-                    <PeriodLaneRows rows={periodRows} weekKeys={weekKeys} currentUserId={currentUserId} onOpenSchedule={onOpenSchedule} />
-                  </div>
-                </div>
-              ) : null}
-            </div>
+                </>
+              }
+              weekDays={weekDays}
+              weekKeys={weekKeys}
+              currentUserId={currentUserId}
+              normalSchedulesByDay={(dayKey) =>
+                facilitySchedules
+                  .filter((schedule) => scheduleIntersectsDay(schedule, dayKey))
+                  .filter((schedule) => getScheduleType(schedule) !== "period")
+              }
+              periodRows={periodRows}
+              onAdd={(dayKey) => onAddFacilitySchedule?.(facility.id, dayKey)}
+              onOpenSchedule={onOpenSchedule}
+            />
           );
         })}
       </div>

@@ -785,63 +785,59 @@ button, input, select, textarea { font: inherit; }
 .schedule-cell { display: grid; gap: 8px; align-content: start; }
 .week-row-stack { display: grid; }
 .period-grid { position: relative; }
-.period-label-cell {
-  min-height: 52px;
-  display: grid;
-  align-content: center;
-  background: rgba(247, 243, 236, 0.95);
-}
-.period-label-cell span {
-  font-size: 0.8rem;
-  color: var(--muted);
-  font-weight: 700;
+.period-stub-cell {
+  min-height: 0;
+  padding: 0;
+  border-bottom: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .period-grid-body {
   grid-column: 2 / span 7;
   display: grid;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: 2px;
+  padding: 0 0 6px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.72);
 }
 .period-lane-stack {
   display: grid;
-  gap: 6px;
+  gap: 0;
 }
 .period-lane-row {
   display: grid;
   grid-template-columns: repeat(7, minmax(116px, 1fr));
-  gap: 6px;
+  gap: 0;
 }
 .period-chip {
-  min-height: 34px;
-  padding: 7px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(11, 118, 97, 0.28);
-  background: rgba(11, 118, 97, 0.12);
+  min-height: 26px;
+  margin: 0 4px 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 0;
+  background: rgba(11, 118, 97, 0.18);
   text-align: left;
   cursor: pointer;
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
   color: var(--text);
+  overflow: hidden;
 }
 .period-chip strong {
-  font-size: 0.86rem;
+  font-size: 0.8rem;
   line-height: 1.2;
-}
-.period-chip span {
-  color: var(--muted);
-  font-size: 0.72rem;
-  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .period-chip.continued-left {
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 .period-chip.continued-right {
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 .schedule-chip, .post-card, .comment-card, .list-row, .mobile-user-card {
   background: white;
@@ -977,7 +973,7 @@ button, input, select, textarea { font: inherit; }
 }
 .schedule-date-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 240px));
+  grid-template-columns: repeat(2, minmax(160px, 180px));
   gap: 12px;
   align-items: end;
   justify-content: start;
@@ -1015,10 +1011,6 @@ button, input, select, textarea { font: inherit; }
   border: 1px solid var(--line);
   border-radius: 16px;
   background: white;
-}
-
-.schedule-all-day-toggle span:last-child {
-  line-height: 1.35;
 }
 
 .status-badge {
