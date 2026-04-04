@@ -426,7 +426,7 @@ export function ScheduleDialog({
                     }));
                   }}
                 />
-                <span>終日予定として登録する</span>
+                <span>終日</span>
               </label>
             </label>
           </div>
