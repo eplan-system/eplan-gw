@@ -357,33 +357,6 @@ export function ScheduleDialog({
                 required
               />
             </label>
-
-            <label className="field field-checkbox schedule-all-day-field">
-              <span>終日</span>
-              <label className="checkbox-row schedule-all-day-toggle">
-                <input
-                  type="checkbox"
-                  checked={allDay}
-                  onChange={(event) => {
-                    const nextAllDay = event.target.checked;
-                    setAllDay(nextAllDay);
-                    if (nextAllDay && endDate < startDate) {
-                      setEndDate(startDate);
-                    } else if (!nextAllDay && !schedule) {
-                      const nextEnd = addHoursToLocalDateTime(startDate, startTime, 1);
-                      setEndDate(nextEnd.datePart);
-                      setEndTime(nextEnd.timePart);
-                      setAutoAdjustEnd(true);
-                    }
-                    setForm((current) => ({
-                      ...current,
-                      allDay: nextAllDay
-                    }));
-                  }}
-                />
-                <span>終日予定として登録する</span>
-              </label>
-            </label>
           </div>
 
           <div className={`full schedule-time-grid${allDay ? " is-disabled" : ""}`}>
@@ -428,6 +401,33 @@ export function ScheduleDialog({
                   </option>
                 ))}
               </select>
+            </label>
+
+            <label className="field field-checkbox schedule-all-day-field">
+              <span>終日</span>
+              <label className="checkbox-row schedule-all-day-toggle">
+                <input
+                  type="checkbox"
+                  checked={allDay}
+                  onChange={(event) => {
+                    const nextAllDay = event.target.checked;
+                    setAllDay(nextAllDay);
+                    if (nextAllDay && endDate < startDate) {
+                      setEndDate(startDate);
+                    } else if (!nextAllDay && !schedule) {
+                      const nextEnd = addHoursToLocalDateTime(startDate, startTime, 1);
+                      setEndDate(nextEnd.datePart);
+                      setEndTime(nextEnd.timePart);
+                      setAutoAdjustEnd(true);
+                    }
+                    setForm((current) => ({
+                      ...current,
+                      allDay: nextAllDay
+                    }));
+                  }}
+                />
+                <span>終日予定として登録する</span>
+              </label>
             </label>
           </div>
 
