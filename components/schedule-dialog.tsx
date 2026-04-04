@@ -403,8 +403,8 @@ export function ScheduleDialog({
               </select>
             </label>
 
-            <label className="field field-checkbox schedule-all-day-field">
-              <span>終日</span>
+            <div className="field field-checkbox schedule-all-day-field schedule-all-day-inline">
+              <span className="visually-hidden">終日</span>
               <label className="checkbox-row schedule-all-day-toggle">
                 <input
                   type="checkbox"
@@ -428,7 +428,7 @@ export function ScheduleDialog({
                 />
                 <span>終日</span>
               </label>
-            </label>
+            </div>
           </div>
 
           <label className="field full">

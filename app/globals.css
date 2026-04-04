@@ -60,6 +60,17 @@ button, input, select, textarea { font: inherit; }
 .loading-card, .login-card { width: min(460px, 100%); padding: 28px; }
 .login-card { display: grid; gap: 18px; }
 .field { display: grid; gap: 8px; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .field input, .field select, .field textarea {
   width: 100%;
   padding: 14px 16px;
@@ -921,6 +932,10 @@ button, input, select, textarea { font: inherit; }
 
 .schedule-all-day-field {
   min-width: 0;
+}
+
+.schedule-all-day-inline {
+  align-content: end;
 }
 
 .schedule-all-day-toggle {
