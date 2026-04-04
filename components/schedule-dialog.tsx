@@ -324,108 +324,112 @@ export function ScheduleDialog({
             />
           </label>
 
-          <label className="field">
-            <span>開始日</span>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(event) => {
-                const nextStartDate = event.target.value;
-                setStartDate(nextStartDate);
-                if (!schedule && autoAdjustEnd && !allDay) {
-                  syncEndWithStart(nextStartDate, startTime);
-                  return;
-                }
-                setForm((current) => ({ ...current, startAt: `${nextStartDate}T${startTime}` }));
-              }}
-              required
-            />
-          </label>
-
-          <label className="field field-checkbox">
-            <span>終日</span>
-            <label className="checkbox-row">
+          <div className="full schedule-date-grid">
+            <label className="field">
+              <span>開始日</span>
               <input
-                type="checkbox"
-                checked={allDay}
+                type="date"
+                value={startDate}
                 onChange={(event) => {
-                  const nextAllDay = event.target.checked;
-                  setAllDay(nextAllDay);
-                  if (nextAllDay && endDate < startDate) {
-                    setEndDate(startDate);
-                  } else if (!nextAllDay && !schedule) {
-                    const nextEnd = addHoursToLocalDateTime(startDate, startTime, 1);
-                    setEndDate(nextEnd.datePart);
-                    setEndTime(nextEnd.timePart);
-                    setAutoAdjustEnd(true);
+                  const nextStartDate = event.target.value;
+                  setStartDate(nextStartDate);
+                  if (!schedule && autoAdjustEnd && !allDay) {
+                    syncEndWithStart(nextStartDate, startTime);
+                    return;
                   }
-                  setForm((current) => ({
-                    ...current,
-                    allDay: nextAllDay
-                  }));
+                  setForm((current) => ({ ...current, startAt: `${nextStartDate}T${startTime}` }));
                 }}
+                required
               />
-              <span>終日予定として登録する</span>
             </label>
-          </label>
 
-          <label className="field">
-            <span>開始時刻</span>
-            <select
-              value={startTime}
-              disabled={allDay}
-              onChange={(event) => {
-                const nextStartTime = event.target.value;
-                setStartTime(nextStartTime);
-                if (!schedule && autoAdjustEnd && !allDay) {
-                  syncEndWithStart(startDate, nextStartTime);
-                  return;
-                }
-                setForm((current) => ({ ...current, startAt: `${startDate}T${nextStartTime}` }));
-              }}
-            >
-              {TIME_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label className="field">
+              <span>終了日</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(event) => {
+                  const nextEndDate = event.target.value;
+                  setAutoAdjustEnd(false);
+                  setEndDate(nextEndDate);
+                  setForm((current) => ({ ...current, endAt: `${nextEndDate}T${endTime}` }));
+                }}
+                required
+              />
+            </label>
 
-          <label className="field">
-            <span>終了日</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(event) => {
-                const nextEndDate = event.target.value;
-                setAutoAdjustEnd(false);
-                setEndDate(nextEndDate);
-                setForm((current) => ({ ...current, endAt: `${nextEndDate}T${endTime}` }));
-              }}
-              required
-            />
-          </label>
+            <label className="field field-checkbox schedule-all-day-field">
+              <span>終日</span>
+              <label className="checkbox-row schedule-all-day-toggle">
+                <input
+                  type="checkbox"
+                  checked={allDay}
+                  onChange={(event) => {
+                    const nextAllDay = event.target.checked;
+                    setAllDay(nextAllDay);
+                    if (nextAllDay && endDate < startDate) {
+                      setEndDate(startDate);
+                    } else if (!nextAllDay && !schedule) {
+                      const nextEnd = addHoursToLocalDateTime(startDate, startTime, 1);
+                      setEndDate(nextEnd.datePart);
+                      setEndTime(nextEnd.timePart);
+                      setAutoAdjustEnd(true);
+                    }
+                    setForm((current) => ({
+                      ...current,
+                      allDay: nextAllDay
+                    }));
+                  }}
+                />
+                <span>終日予定として登録する</span>
+              </label>
+            </label>
+          </div>
 
-          <label className="field">
-            <span>終了時刻</span>
-            <select
-              value={endTime}
-              disabled={allDay}
-              onChange={(event) => {
-                const nextEndTime = event.target.value;
-                setAutoAdjustEnd(false);
-                setEndTime(nextEndTime);
-                setForm((current) => ({ ...current, endAt: `${endDate}T${nextEndTime}` }));
-              }}
-            >
-              {TIME_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className={`full schedule-time-grid${allDay ? " is-disabled" : ""}`}>
+            <label className="field">
+              <span>開始時刻</span>
+              <select
+                value={startTime}
+                disabled={allDay}
+                onChange={(event) => {
+                  const nextStartTime = event.target.value;
+                  setStartTime(nextStartTime);
+                  if (!schedule && autoAdjustEnd && !allDay) {
+                    syncEndWithStart(startDate, nextStartTime);
+                    return;
+                  }
+                  setForm((current) => ({ ...current, startAt: `${startDate}T${nextStartTime}` }));
+                }}
+              >
+                {TIME_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>終了時刻</span>
+              <select
+                value={endTime}
+                disabled={allDay}
+                onChange={(event) => {
+                  const nextEndTime = event.target.value;
+                  setAutoAdjustEnd(false);
+                  setEndTime(nextEndTime);
+                  setForm((current) => ({ ...current, endAt: `${endDate}T${nextEndTime}` }));
+                }}
+              >
+                {TIME_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
           <label className="field full">
             <span>参加者</span>

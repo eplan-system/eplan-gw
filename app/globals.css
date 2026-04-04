@@ -899,6 +899,40 @@ button, input, select, textarea { font: inherit; }
 
 .form-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .form-grid .full { grid-column: 1 / -1; }
+.schedule-date-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.schedule-time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.schedule-time-grid.is-disabled {
+  opacity: 0.58;
+}
+
+.schedule-all-day-field {
+  min-width: 220px;
+}
+
+.schedule-all-day-toggle {
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+}
+
+.schedule-all-day-toggle span:last-child {
+  line-height: 1.35;
+}
+
 .status-badge {
   display: inline-flex;
   padding: 6px 10px;
@@ -1299,6 +1333,13 @@ button, input, select, textarea { font: inherit; }
   .form-grid { grid-template-columns: 1fr; }
   .compact-form-grid { grid-template-columns: 1fr; }
   .settings-inline-grid { grid-template-columns: 1fr; }
+  .schedule-date-grid,
+  .schedule-time-grid {
+    grid-template-columns: 1fr;
+  }
+  .schedule-all-day-field {
+    min-width: 0;
+  }
   .settings-action-row { justify-content: flex-start; }
   .topbar {
     padding: 8px 10px;
