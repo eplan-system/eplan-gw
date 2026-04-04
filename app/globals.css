@@ -1394,18 +1394,23 @@ button, input, select, textarea { font: inherit; }
     width: 100%;
   }
   .week-switcher {
-    justify-content: space-between;
-    gap: 6px;
+    justify-content: flex-start;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
   }
   .week-label {
-    flex: 1;
+    flex: 0 0 auto;
     text-align: center;
-    padding: 7px 10px;
-    font-size: 0.84rem;
+    min-width: 108px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
   }
   .small-button {
-    padding: 7px 10px;
-    font-size: 0.8rem;
+    padding: 6px 8px;
+    font-size: 0.76rem;
+    white-space: nowrap;
   }
   .week-grid {
     grid-template-columns: 110px repeat(7, minmax(86px, 1fr));
