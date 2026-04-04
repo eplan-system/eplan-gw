@@ -1,101 +1,150 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { listFiles, listPosts } from "@/lib/data-service";
-import { BoardPost, FileEntry } from "@/lib/types";
-import { formatDateTime } from "@/lib/utils";
+import { ScheduleDialog } from "@/components/schedule-dialog";
+import { WeekBoard } from "@/components/week-board";
+import { deleteSchedule, listFacilities, listSchedules, listUsers, saveSchedule } from "@/lib/data-service";
+import { AppUser, Facility, ScheduleDraft, ScheduleItem } from "@/lib/types";
+import { addDays, buildWeekDays, expandRecurringSchedules, formatDateKey, localDateKeyFromIso, sortUsersForDisplay } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [posts, setPosts] = useState<BoardPost[]>([]);
-  const [files, setFiles] = useState<FileEntry[]>([]);
+  const [users, setUsers] = useState<AppUser[]>([]);
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [department, setDepartment] = useState("all");
+  const [weekBaseDate, setWeekBaseDate] = useState(new Date());
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
+  const [draftUserId, setDraftUserId] = useState("");
+  const [draftDate, setDraftDate] = useState(formatDateKey(new Date()));
+  const [draftFacilityIds, setDraftFacilityIds] = useState<string[]>([]);
+
+  async function refresh() {
+    const [nextUsers, nextSchedules, nextFacilities] = await Promise.all([listUsers(), listSchedules(), listFacilities()]);
+    const orderedUsers = sortUsersForDisplay(nextUsers, user?.id);
+    setUsers(orderedUsers);
+    setSchedules(nextSchedules);
+    setFacilities(nextFacilities);
+
+    if (!draftUserId && orderedUsers[0]) {
+      setDraftUserId(orderedUsers[0].id);
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      const [nextPosts, nextFiles] = await Promise.all([listPosts(), listFiles()]);
-      setPosts(
-        [...nextPosts]
-          .sort((left, right) => {
-            if (left.pinned !== right.pinned) return Number(right.pinned) - Number(left.pinned);
-            return right.updatedAt.localeCompare(left.updatedAt);
-          })
-          .slice(0, 4)
-      );
-      setFiles([...nextFiles].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)).slice(0, 4));
-    }
+    void refresh();
+  }, [user?.id]);
 
-    void load();
-  }, []);
+  const departments = useMemo(() => [...new Set(users.map((member) => member.department))], [users]);
+  const weekDays = buildWeekDays(weekBaseDate);
+
+  function openNewSchedule(userId: string, dayKey: string) {
+    setSelectedSchedule(null);
+    setDraftUserId(userId);
+    setDraftDate(dayKey);
+    setDraftFacilityIds([]);
+    setDialogOpen(true);
+  }
+
+  function openNewFacilitySchedule(facilityId: string, dayKey: string) {
+    setSelectedSchedule(null);
+    setDraftUserId(user?.id || users[0]?.id || "");
+    setDraftDate(dayKey);
+    setDraftFacilityIds([facilityId]);
+    setDialogOpen(true);
+  }
+
+  function openExistingSchedule(schedule: ScheduleItem) {
+    setSelectedSchedule(schedule);
+    setDraftUserId(schedule.ownerUserId);
+    setDraftDate(localDateKeyFromIso(schedule.startAt));
+    setDraftFacilityIds(schedule.facilityIds ?? []);
+    setDialogOpen(true);
+  }
 
   return (
     <div className="page-stack">
-      <section className="surface-card portal-hero-card">
-        <p className="eyebrow">portal home</p>
-        <h3>{user?.name ? `${user.name} さんの社内ポータル` : "社内ポータル"}</h3>
-        <p className="muted">入口を「掲示板」と「ファイル管理」に分けています。普段の運用は各画面からそのまま進められます。</p>
-        <div className="portal-entry-grid">
-          <Link href="/board" className="portal-entry-card">
-            <span className="icon-badge">BBS</span>
-            <strong>掲示板</strong>
-            <p>スレッド一覧から内容確認。本人は自分の投稿を編集・削除できます。</p>
-          </Link>
-          <Link href="/files" className="portal-entry-card">
-            <span className="icon-badge">FIL</span>
-            <strong>ファイル管理</strong>
-            <p>フォルダ別に最新版を管理。差し替え時も情報を残せます。</p>
-          </Link>
-        </div>
-      </section>
-
-      <section className="split-grid">
-        <div className="surface-card">
-          <div className="section-head">
-            <div>
-              <p className="eyebrow">latest board</p>
-              <h3>新着掲示板</h3>
-            </div>
-            <Link href="/board" className="small-button">
-              一覧へ
-            </Link>
+      <section className="surface-card">
+        <div className="dashboard-toolbar">
+          <div>
+            <p className="eyebrow">weekly schedule</p>
+            <h3>全体週間表示</h3>
           </div>
-          <div className="list-stack">
-            {posts.map((post) => (
-              <div key={post.id} className="list-row">
-                <strong>{post.title}</strong>
-                <p>{post.body}</p>
-                <span className="muted">{formatDateTime(post.updatedAt)}</span>
-              </div>
-            ))}
-            {posts.length === 0 ? <p className="muted">まだ投稿がありません。</p> : null}
+          <div className="toolbar-group">
+            <label className="compact-filter">
+              <select aria-label="表示対象" value={department} onChange={(event) => setDepartment(event.target.value)}>
+                <option value="all">全社</option>
+                {departments.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+                <option value="facilities">設備</option>
+              </select>
+            </label>
+            <div className="week-switcher">
+              <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, -7))}>
+                前週
+              </button>
+              <button className="small-button" type="button" onClick={() => setWeekBaseDate(new Date())}>
+                今週
+              </button>
+              <span className="week-label">
+                {weekDays[0]?.date} - {weekDays[6]?.date}
+              </span>
+              <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, 7))}>
+                次週
+              </button>
+            </div>
+            <button className="small-button" type="button" onClick={() => openNewSchedule(draftUserId || user?.id || users[0]?.id || "", draftDate)}>
+              ＋予定追加
+            </button>
           </div>
         </div>
 
-        <div className="surface-card">
-          <div className="section-head">
-            <div>
-              <p className="eyebrow">latest files</p>
-              <h3>最近更新されたファイル</h3>
-            </div>
-            <Link href="/files" className="small-button">
-              一覧へ
-            </Link>
-          </div>
-          <div className="list-stack">
-            {files.map((entry) => (
-              <div key={entry.id} className="list-row">
-                <strong>{entry.title}</strong>
-                <p>{entry.summary}</p>
-                <span className="muted">
-                  {entry.folder} | {entry.version} | {formatDateTime(entry.updatedAt)}
-                </span>
-              </div>
-            ))}
-            {files.length === 0 ? <p className="muted">まだファイル登録がありません。</p> : null}
-          </div>
-        </div>
+        <WeekBoard
+          users={users}
+          facilities={facilities}
+          schedules={schedules}
+          department={department}
+          baseDate={weekBaseDate}
+          currentUserId={user?.id}
+          onAddSchedule={openNewSchedule}
+          onOpenSchedule={openExistingSchedule}
+          onAddFacilitySchedule={openNewFacilitySchedule}
+        />
       </section>
+
+      <ScheduleDialog
+        open={dialogOpen}
+        users={users}
+        facilities={facilities}
+        currentUserId={user?.id || ""}
+        initialUserId={draftUserId}
+        initialDate={draftDate}
+        initialFacilityIds={draftFacilityIds}
+        schedule={selectedSchedule}
+        onClose={() => setDialogOpen(false)}
+        onSave={async (payload) => {
+          if (!payload.id && payload.recurrenceRule) {
+            const expanded = expandRecurringSchedules(payload as ScheduleDraft);
+            for (const item of expanded) {
+              await saveSchedule(item);
+            }
+          } else {
+            await saveSchedule(payload);
+          }
+          setDialogOpen(false);
+          await refresh();
+        }}
+        onDelete={async (scheduleId) => {
+          await deleteSchedule(scheduleId);
+          setDialogOpen(false);
+          await refresh();
+        }}
+      />
     </div>
   );
 }

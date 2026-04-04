@@ -13,8 +13,8 @@ import {
   updatePassword as firebaseUpdatePassword
 } from "firebase/auth";
 import { auth, db, isFirebaseConfigured } from "@/lib/firebase";
-import { seedComments, seedFacilities, seedFiles, seedPosts, seedReservations, seedSchedules, seedUsers } from "@/lib/demo-data";
-import { AppUser, BoardComment, BoardPost, Facility, FileEntry, Reservation, ScheduleDraft, ScheduleItem } from "@/lib/types";
+import { seedComments, seedFacilities, seedPosts, seedReservations, seedSchedules, seedUsers } from "@/lib/demo-data";
+import { AppUser, BoardComment, BoardPost, Facility, Reservation, ScheduleDraft, ScheduleItem } from "@/lib/types";
 import { uid } from "@/lib/utils";
 
 const keys = {
@@ -24,7 +24,6 @@ const keys = {
   reservations: "demo-reservations",
   posts: "demo-posts",
   comments: "demo-comments",
-  files: "demo-files",
   session: "demo-session"
 };
 
@@ -35,7 +34,6 @@ type Snapshot = {
   reservations: Reservation[];
   posts: BoardPost[];
   comments: BoardComment[];
-  files: FileEntry[];
 };
 
 const CALENDAR_SYNC_MONTHS = 3;
@@ -105,8 +103,7 @@ function readDemoStore(): Snapshot {
     facilities: readSeed(keys.facilities, seedFacilities),
     reservations: readSeed(keys.reservations, seedReservations),
     posts: readSeed(keys.posts, seedPosts),
-    comments: readSeed(keys.comments, seedComments),
-    files: readSeed(keys.files, seedFiles)
+    comments: readSeed(keys.comments, seedComments)
   };
 }
 
@@ -548,38 +545,3 @@ export async function deletePost(postId: string) {
   writeSeed(keys.comments, snapshot.comments.filter((item) => item.postId !== postId));
 }
 
-export async function listFiles() {
-  return isFirebaseConfigured ? readCollection<FileEntry>("Files") : readDemoStore().files;
-}
-
-export async function saveFileEntry(entry: Omit<FileEntry, "id" | "createdAt" | "updatedAt"> & { id?: string }) {
-  const existing = entry.id ? (await listFiles()).find((item) => item.id === entry.id) : null;
-  const payload: FileEntry = {
-    ...entry,
-    id: entry.id ?? uid(),
-    createdAt: existing?.createdAt ?? new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-
-  if (isFirebaseConfigured && db) {
-    await setDoc(doc(db, "Files", payload.id), payload);
-    return payload;
-  }
-
-  const snapshot = readDemoStore();
-  const next = snapshot.files.some((item) => item.id === payload.id)
-    ? snapshot.files.map((item) => (item.id === payload.id ? payload : item))
-    : [payload, ...snapshot.files];
-  writeSeed(keys.files, next);
-  return payload;
-}
-
-export async function deleteFileEntry(fileId: string) {
-  if (isFirebaseConfigured && db) {
-    await deleteDoc(doc(db, "Files", fileId));
-    return;
-  }
-
-  const snapshot = readDemoStore();
-  writeSeed(keys.files, snapshot.files.filter((item) => item.id !== fileId));
-}
