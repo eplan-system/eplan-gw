@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { ScheduleDialog } from "@/components/schedule-dialog";
 import { WeekBoard } from "@/components/week-board";
+import { DEPARTMENT_OPTIONS } from "@/lib/constants";
 import { deleteSchedule, listFacilities, listSchedules, listUsers, saveSchedule } from "@/lib/data-service";
 import { AppUser, Facility, ScheduleDraft, ScheduleItem, ScheduleViewMode } from "@/lib/types";
 import {
@@ -71,9 +72,12 @@ export default function SchedulesPage() {
   }, [user?.id]);
 
   const targetUserId = selectedUserId || user?.id || users[0]?.id || "";
-  const departments = [...new Set(users.map((member) => member.department))];
-  const monthDays = buildMonthDays(calendarBase);
   const weekDays = buildWeekDays(calendarBase);
+  const monthDays = buildMonthDays(calendarBase);
+  const departments = useMemo(
+    () => DEPARTMENT_OPTIONS.filter((item) => users.some((userItem) => userItem.department === item)),
+    [users]
+  );
   const monthSchedules = schedulesForUserInMonth(items, targetUserId, calendarBase);
   const personalSchedules = items
     .filter((item) => item.ownerUserId === targetUserId || item.participantUserIds.includes(targetUserId))
@@ -87,18 +91,11 @@ export default function SchedulesPage() {
     }
 
     if (mode === "personal-week") {
-      const weekKeys = new Set(weekDays.map((day) => day.key));
-      return personalSchedules.filter((item) => weekDays.some((day) => weekKeys.has(day.key) && scheduleIntersectsDay(item, day.key)));
+      return personalSchedules.filter((item) => weekDays.some((day) => scheduleIntersectsDay(item, day.key)));
     }
 
     return personalSchedules;
   }, [calendarBase, mode, personalSchedules, weekDays]);
-
-  const dayToneClass = (dayKey: string) => {
-    if (isHolidayKey(dayKey) || isSundayKey(dayKey)) return "holiday-cell";
-    if (isSaturdayKey(dayKey)) return "saturday-cell";
-    return "";
-  };
 
   function openNewSchedule(userId: string, dayKey: string) {
     setSelectedSchedule(null);
@@ -124,6 +121,12 @@ export default function SchedulesPage() {
     setDialogOpen(true);
   }
 
+  function dayToneClass(dayKey: string) {
+    if (isHolidayKey(dayKey) || isSundayKey(dayKey)) return "holiday-cell";
+    if (isSaturdayKey(dayKey)) return "saturday-cell";
+    return "";
+  }
+
   return (
     <div className="page-stack">
       <section className="surface-card">
@@ -132,6 +135,7 @@ export default function SchedulesPage() {
             <p className="eyebrow">schedule modes</p>
             <h3>表示モード</h3>
           </div>
+
           <div className="toolbar-group">
             <div className="tab-list">
               {modes.map((item) => (
@@ -140,6 +144,7 @@ export default function SchedulesPage() {
                 </button>
               ))}
             </div>
+
             {mode === "team-week" ? (
               <label className="compact-filter">
                 <select aria-label="表示対象" value={department} onChange={(event) => setDepartment(event.target.value)}>
@@ -154,7 +159,7 @@ export default function SchedulesPage() {
               </label>
             ) : (
               <label className="compact-filter">
-                <select aria-label="対象者" value={targetUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+                <select aria-label="対象ユーザー" value={targetUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
                   {users.map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.id === user?.id ? `${member.name}（自分）` : member.name}
@@ -185,6 +190,7 @@ export default function SchedulesPage() {
                 </button>
               </div>
             </div>
+
             <WeekBoard
               users={users}
               facilities={facilities}
@@ -217,6 +223,7 @@ export default function SchedulesPage() {
                 </button>
               </div>
             </div>
+
             <div className="month-grid month-header">
               {["月", "火", "水", "木", "金", "土", "日"].map((label, index) => (
                 <div
@@ -229,6 +236,7 @@ export default function SchedulesPage() {
                 </div>
               ))}
             </div>
+
             <div className="month-grid">
               {monthDays.map((day) => {
                 const daySchedules = monthSchedules
@@ -262,6 +270,7 @@ export default function SchedulesPage() {
                     <div className="month-cell-top">
                       <strong className="month-day-number">{day.day}</strong>
                     </div>
+
                     <div className="month-schedule-list">
                       {daySchedules.length ? (
                         daySchedules.map((item) => {
@@ -306,7 +315,7 @@ export default function SchedulesPage() {
                   <strong>{visible.title}</strong>
                   <div className="list-meta">
                     <span>{formatDateTime(item.startAt)}</span>
-                    <span>登録者 {userNameById(users, item.ownerUserId)}</span>
+                    <span>登録者: {userNameById(users, item.ownerUserId)}</span>
                   </div>
                   {visible.memo ? <p className="muted">{visible.memo}</p> : null}
                 </article>

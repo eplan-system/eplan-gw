@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { ScheduleDialog } from "@/components/schedule-dialog";
 import { WeekBoard } from "@/components/week-board";
+import { DEPARTMENT_OPTIONS } from "@/lib/constants";
 import { deleteSchedule, listFacilities, listSchedules, listUsers, saveSchedule } from "@/lib/data-service";
 import { AppUser, Facility, ScheduleDraft, ScheduleItem } from "@/lib/types";
 import { addDays, buildWeekDays, expandRecurringSchedules, formatDateKey, localDateKeyFromIso, sortUsersForDisplay } from "@/lib/utils";
@@ -37,8 +38,11 @@ export default function DashboardPage() {
     void refresh();
   }, [user?.id]);
 
-  const departments = useMemo(() => [...new Set(users.map((member) => member.department))], [users]);
   const weekDays = buildWeekDays(weekBaseDate);
+  const departments = useMemo(
+    () => DEPARTMENT_OPTIONS.filter((item) => users.some((userItem) => userItem.department === item)),
+    [users]
+  );
 
   function openNewSchedule(userId: string, dayKey: string) {
     setSelectedSchedule(null);
@@ -72,6 +76,7 @@ export default function DashboardPage() {
             <p className="eyebrow">weekly schedule</p>
             <h3>全体週間表示</h3>
           </div>
+
           <div className="toolbar-group">
             <label className="compact-filter">
               <select aria-label="表示対象" value={department} onChange={(event) => setDepartment(event.target.value)}>
@@ -84,6 +89,7 @@ export default function DashboardPage() {
                 <option value="facilities">設備</option>
               </select>
             </label>
+
             <div className="toolbar-controls-row">
               <div className="week-switcher">
                 <button className="small-button" type="button" onClick={() => setWeekBaseDate((current) => addDays(current, -7))}>
@@ -99,7 +105,12 @@ export default function DashboardPage() {
                   次週
                 </button>
               </div>
-              <button className="small-button add-schedule-button" type="button" onClick={() => openNewSchedule(draftUserId || user?.id || users[0]?.id || "", draftDate)}>
+
+              <button
+                className="small-button add-schedule-button"
+                type="button"
+                onClick={() => openNewSchedule(draftUserId || user?.id || users[0]?.id || "", draftDate)}
+              >
                 ＋予定追加
               </button>
             </div>

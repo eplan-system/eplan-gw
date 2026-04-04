@@ -2,6 +2,7 @@ export type UserRole = "admin" | "member";
 export type ScheduleViewMode = "team-week" | "personal-month" | "personal-week" | "personal-day";
 export type RecurrenceFrequency = "none" | "daily" | "weekly" | "monthly";
 export type ScheduleVisibility = "public" | "busy" | "private";
+export type ScheduleType = "normal" | "allDay" | "period";
 
 export interface RecurrenceRule {
   frequency: Exclude<RecurrenceFrequency, "none">;
@@ -30,6 +31,7 @@ export interface ScheduleItem {
   startAt: string;
   endAt: string;
   allDay?: boolean;
+  scheduleType?: ScheduleType;
   ownerUserId: string;
   participantUserIds: string[];
   facilityIds: string[];
@@ -47,6 +49,7 @@ export interface ScheduleDraft {
   startAt: string;
   endAt: string;
   allDay?: boolean;
+  scheduleType?: ScheduleType;
   ownerUserId: string;
   participantUserIds: string[];
   facilityIds: string[];

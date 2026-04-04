@@ -1,5 +1,5 @@
 import { WEEKDAY_LABELS } from "@/lib/constants";
-import { AppUser, RecurrenceRule, ScheduleDraft, ScheduleItem } from "@/lib/types";
+import { AppUser, RecurrenceRule, ScheduleDraft, ScheduleItem, ScheduleType } from "@/lib/types";
 
 const TOKYO_DATE_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
@@ -36,6 +36,7 @@ export function formatDateKey(date = new Date()) {
 
 export function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
     month: "numeric",
     day: "numeric",
     hour: "2-digit",
@@ -63,11 +64,23 @@ export function formatTokyoIso(date: Date) {
   const day = dateParts.find((part) => part.type === "day")?.value ?? "01";
   const hour = timeParts.find((part) => part.type === "hour")?.value ?? "00";
   const minute = timeParts.find((part) => part.type === "minute")?.value ?? "00";
-  return `${year}-${month}-${day}T${hour}:${minute}:00+09:00`;
+  const second = timeParts.find((part) => part.type === "second")?.value ?? "00";
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}+09:00`;
+}
+
+export function getScheduleType(schedule: Pick<ScheduleItem, "scheduleType" | "allDay">): ScheduleType {
+  if (schedule.scheduleType) return schedule.scheduleType;
+  return schedule.allDay ? "allDay" : "normal";
 }
 
 export function formatScheduleTimeLabel(schedule: ScheduleItem) {
-  if (schedule.allDay) {
+  const scheduleType = getScheduleType(schedule);
+
+  if (scheduleType === "period") {
+    return "期間予定";
+  }
+
+  if (scheduleType === "allDay") {
     return "終日";
   }
 
@@ -76,11 +89,12 @@ export function formatScheduleTimeLabel(schedule: ScheduleItem) {
 
 export function startOfWeek(base = new Date()) {
   const date = new Date(base);
-  const day = date.getDay();
+  const tokyoDate = new Date(`${formatDateKey(date)}T00:00:00+09:00`);
+  const day = tokyoDate.getDay();
   const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
+  tokyoDate.setDate(tokyoDate.getDate() + diff);
+  tokyoDate.setHours(0, 0, 0, 0);
+  return tokyoDate;
 }
 
 export function buildWeekDays(base = new Date()) {
@@ -108,7 +122,7 @@ export function addDays(base: Date, days: number) {
 }
 
 export function startOfMonth(base = new Date()) {
-  const next = new Date(base);
+  const next = new Date(`${formatDateKey(base)}T00:00:00+09:00`);
   next.setDate(1);
   next.setHours(0, 0, 0, 0);
   return next;
@@ -172,9 +186,7 @@ function buildJapaneseHolidayMap(year: number) {
 
   add(1, 1, "元日");
   add(2, 11, "建国記念の日");
-  if (year >= 2020) {
-    add(2, 23, "天皇誕生日");
-  }
+  if (year >= 2020) add(2, 23, "天皇誕生日");
   add(4, 29, "昭和の日");
   add(5, 3, "憲法記念日");
   add(5, 4, "みどりの日");
@@ -193,8 +205,8 @@ function buildJapaneseHolidayMap(year: number) {
 
   const baseEntries = [...holidays.entries()];
 
-  for (const [key, name] of baseEntries) {
-    const date = new Date(`${key}T00:00:00`);
+  for (const [key] of baseEntries) {
+    const date = new Date(`${key}T00:00:00+09:00`);
     if (date.getDay() !== 0) continue;
 
     const substitute = new Date(date);
@@ -241,11 +253,11 @@ export function isHolidayKey(dayKey: string) {
 }
 
 export function isSaturdayKey(dayKey: string) {
-  return new Date(`${dayKey}T00:00:00`).getDay() === 6;
+  return new Date(`${dayKey}T00:00:00+09:00`).getDay() === 6;
 }
 
 export function isSundayKey(dayKey: string) {
-  return new Date(`${dayKey}T00:00:00`).getDay() === 0;
+  return new Date(`${dayKey}T00:00:00+09:00`).getDay() === 0;
 }
 
 export function schedulesForUserOnDay(schedules: ScheduleItem[], userId: string, isoDay: string) {
@@ -253,6 +265,60 @@ export function schedulesForUserOnDay(schedules: ScheduleItem[], userId: string,
     const involved = schedule.ownerUserId === userId || schedule.participantUserIds.includes(userId);
     return involved && scheduleIntersectsDay(schedule, isoDay);
   });
+}
+
+export type PeriodSegment = {
+  schedule: ScheduleItem;
+  startColumn: number;
+  endColumn: number;
+};
+
+export function buildPeriodRows(schedules: ScheduleItem[], weekKeys: string[]) {
+  const segments = schedules
+    .filter((schedule) => getScheduleType(schedule) === "period")
+    .map((schedule) => {
+      const startKey = localDateKeyFromIso(schedule.startAt);
+      const endDate = new Date(schedule.endAt);
+      endDate.setTime(endDate.getTime() - 1);
+      const endKey = formatDateKey(endDate);
+      const startColumn = weekKeys.findIndex((key) => key >= startKey);
+      let endColumn = -1;
+
+      for (let index = weekKeys.length - 1; index >= 0; index -= 1) {
+        if (weekKeys[index] <= endKey) {
+          endColumn = index;
+          break;
+        }
+      }
+
+      return { schedule, startColumn, endColumn };
+    })
+    .filter((segment) => segment.startColumn !== -1 && segment.endColumn !== -1 && segment.endColumn >= segment.startColumn)
+    .sort((left, right) => {
+      if (left.startColumn !== right.startColumn) return left.startColumn - right.startColumn;
+      return left.endColumn - right.endColumn;
+    });
+
+  const rows: PeriodSegment[][] = [];
+
+  segments.forEach((segment) => {
+    const normalized: PeriodSegment = {
+      schedule: segment.schedule,
+      startColumn: segment.startColumn,
+      endColumn: segment.endColumn
+    };
+    const targetRow = rows.find((row) =>
+      row.every((item) => normalized.startColumn > item.endColumn || normalized.endColumn < item.startColumn)
+    );
+
+    if (targetRow) {
+      targetRow.push(normalized);
+    } else {
+      rows.push([normalized]);
+    }
+  });
+
+  return rows;
 }
 
 export function schedulesForUserInMonth(schedules: ScheduleItem[], userId: string, base = new Date()) {
@@ -287,7 +353,7 @@ export function sortUsersForDisplay(users: AppUser[], currentUserId?: string | n
 }
 
 export function userNameById(users: AppUser[], userId: string) {
-  return users.find((user) => user.id === userId)?.name ?? "他メンバー";
+  return users.find((user) => user.id === userId)?.name ?? "未登録メンバー";
 }
 
 export function recurrenceSummary(rule?: RecurrenceRule | null) {
@@ -308,7 +374,7 @@ export function recurrenceSummary(rule?: RecurrenceRule | null) {
 
   if (rule.frequency === "weekly") {
     const labels = (rule.weeklyDays ?? []).map((day) => WEEKDAY_LABELS[day]).join("・");
-    return `${rule.interval}週ごと / ${labels || "曜日未指定"} / ${endLabel}`;
+    return `${rule.interval}週ごと / ${labels || "曜日未設定"} / ${endLabel}`;
   }
 
   if (rule.frequency === "monthly") {
@@ -378,10 +444,11 @@ export function buildIcsFile(schedules: ScheduleItem[], calendarName: string) {
     .slice()
     .sort((left, right) => left.startAt.localeCompare(right.startAt))
     .forEach((schedule) => {
+      const scheduleType = getScheduleType(schedule);
       lines.push("BEGIN:VEVENT");
       lines.push(`UID:${schedule.id}@office-hub.local`);
       lines.push(`DTSTAMP:${formatIcsDate(schedule.updatedAt || schedule.createdAt)}`);
-      if (schedule.allDay) {
+      if (scheduleType !== "normal") {
         lines.push(`DTSTART;VALUE=DATE:${formatIcsAllDayDate(schedule.startAt)}`);
         lines.push(`DTEND;VALUE=DATE:${formatIcsAllDayDate(schedule.endAt)}`);
       } else {
@@ -422,13 +489,15 @@ export function expandRecurringSchedules(schedule: ScheduleDraft) {
           : 24;
   const until =
     endMode === "until" && recurrenceRule.until
-      ? new Date(`${recurrenceRule.until}T23:59:59`)
-      : endMode === "never"
-        ? new Date(start.getTime() + 1000 * 60 * 60 * 24 * 366 * 2)
-        : new Date(start.getTime() + 1000 * 60 * 60 * 24 * 366 * 2);
+      ? new Date(`${recurrenceRule.until}T23:59:59+09:00`)
+      : new Date(start.getTime() + 1000 * 60 * 60 * 24 * 366 * 2);
 
   if (recurrenceRule.frequency === "daily") {
-    for (let cursor = new Date(start), count = 0; cursor <= until && count < maxOccurrences; cursor = addDays(cursor, recurrenceRule.interval), count += 1) {
+    for (
+      let cursor = new Date(start), count = 0;
+      cursor <= until && count < maxOccurrences;
+      cursor = addDays(cursor, recurrenceRule.interval), count += 1
+    ) {
       const nextStart = new Date(cursor);
       const nextEnd = new Date(nextStart.getTime() + durationMs);
       occurrences.push({
@@ -445,7 +514,11 @@ export function expandRecurringSchedules(schedule: ScheduleDraft) {
   if (recurrenceRule.frequency === "weekly") {
     const weeklyDays = recurrenceRule.weeklyDays?.length ? recurrenceRule.weeklyDays : [start.getDay()];
 
-    for (let cursor = new Date(start); cursor <= until && occurrences.length < maxOccurrences; cursor = addDays(cursor, recurrenceRule.interval * 7)) {
+    for (
+      let cursor = new Date(start);
+      cursor <= until && occurrences.length < maxOccurrences;
+      cursor = addDays(cursor, recurrenceRule.interval * 7)
+    ) {
       weeklyDays.forEach((weekday) => {
         if (occurrences.length >= maxOccurrences) return;
         const nextStart = new Date(cursor);
