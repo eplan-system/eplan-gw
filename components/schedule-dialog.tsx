@@ -83,6 +83,15 @@ function splitLocalDateTime(value: string) {
   };
 }
 
+function addHoursToLocalDateTime(datePart: string, timePart: string, hours: number) {
+  const date = new Date(`${datePart}T${timePart}:00+09:00`);
+  date.setHours(date.getHours() + hours);
+  return {
+    datePart: formatDateKey(date),
+    timePart: TOKYO_TIME_FORMATTER.format(date)
+  };
+}
+
 const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, index) => {
   const hour = String(Math.floor(index / 4)).padStart(2, "0");
   const minute = String((index % 4) * 15).padStart(2, "0");
@@ -131,6 +140,7 @@ export function ScheduleDialog({
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [allDay, setAllDay] = useState(false);
+  const [autoAdjustEnd, setAutoAdjustEnd] = useState(true);
   const [startDate, setStartDate] = useState(defaults.startAt.slice(0, 10));
   const [startTime, setStartTime] = useState("09:00");
   const [endDate, setEndDate] = useState(defaults.endAt.slice(0, 10));
@@ -171,6 +181,7 @@ export function ScheduleDialog({
       setWeeklyDays(schedule.recurrenceRule?.weeklyDays ?? [new Date(schedule.startAt).getDay()]);
       setShowAdvanced(Boolean(schedule.recurrenceRule || schedule.visibility !== "public"));
       setAllDay(schedule.allDay ?? false);
+      setAutoAdjustEnd(false);
       setStartDate(startParts.datePart);
       setStartTime(startParts.timePart);
       setEndDate(endParts.datePart);
@@ -200,6 +211,7 @@ export function ScheduleDialog({
     setShowAdvanced(false);
     setErrorMessage("");
     setAllDay(false);
+    setAutoAdjustEnd(true);
     setStartDate(nextStart.datePart);
     setStartTime(nextStart.timePart);
     setEndDate(nextEnd.datePart);
@@ -223,6 +235,17 @@ export function ScheduleDialog({
     { value: "busy", label: "予定ありのみ" },
     { value: "private", label: "自分のみ表示" }
   ];
+
+  function syncEndWithStart(nextStartDate: string, nextStartTime: string) {
+    const nextEnd = addHoursToLocalDateTime(nextStartDate, nextStartTime, 1);
+    setEndDate(nextEnd.datePart);
+    setEndTime(nextEnd.timePart);
+    setForm((current) => ({
+      ...current,
+      startAt: `${nextStartDate}T${nextStartTime}`,
+      endAt: `${nextEnd.datePart}T${nextEnd.timePart}`
+    }));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -307,8 +330,13 @@ export function ScheduleDialog({
               type="date"
               value={startDate}
               onChange={(event) => {
-                setStartDate(event.target.value);
-                setForm({ ...form, startAt: `${event.target.value}T${startTime}` });
+                const nextStartDate = event.target.value;
+                setStartDate(nextStartDate);
+                if (!schedule && autoAdjustEnd && !allDay) {
+                  syncEndWithStart(nextStartDate, startTime);
+                  return;
+                }
+                setForm((current) => ({ ...current, startAt: `${nextStartDate}T${startTime}` }));
               }}
               required
             />
@@ -325,6 +353,11 @@ export function ScheduleDialog({
                   setAllDay(nextAllDay);
                   if (nextAllDay && endDate < startDate) {
                     setEndDate(startDate);
+                  } else if (!nextAllDay && !schedule) {
+                    const nextEnd = addHoursToLocalDateTime(startDate, startTime, 1);
+                    setEndDate(nextEnd.datePart);
+                    setEndTime(nextEnd.timePart);
+                    setAutoAdjustEnd(true);
                   }
                   setForm((current) => ({
                     ...current,
@@ -342,8 +375,13 @@ export function ScheduleDialog({
               value={startTime}
               disabled={allDay}
               onChange={(event) => {
-                setStartTime(event.target.value);
-                setForm({ ...form, startAt: `${startDate}T${event.target.value}` });
+                const nextStartTime = event.target.value;
+                setStartTime(nextStartTime);
+                if (!schedule && autoAdjustEnd && !allDay) {
+                  syncEndWithStart(startDate, nextStartTime);
+                  return;
+                }
+                setForm((current) => ({ ...current, startAt: `${startDate}T${nextStartTime}` }));
               }}
             >
               {TIME_OPTIONS.map((option) => (
@@ -360,8 +398,10 @@ export function ScheduleDialog({
               type="date"
               value={endDate}
               onChange={(event) => {
-                setEndDate(event.target.value);
-                setForm({ ...form, endAt: `${event.target.value}T${endTime}` });
+                const nextEndDate = event.target.value;
+                setAutoAdjustEnd(false);
+                setEndDate(nextEndDate);
+                setForm((current) => ({ ...current, endAt: `${nextEndDate}T${endTime}` }));
               }}
               required
             />
@@ -373,8 +413,10 @@ export function ScheduleDialog({
               value={endTime}
               disabled={allDay}
               onChange={(event) => {
-                setEndTime(event.target.value);
-                setForm({ ...form, endAt: `${endDate}T${event.target.value}` });
+                const nextEndTime = event.target.value;
+                setAutoAdjustEnd(false);
+                setEndTime(nextEndTime);
+                setForm((current) => ({ ...current, endAt: `${endDate}T${nextEndTime}` }));
               }}
             >
               {TIME_OPTIONS.map((option) => (
